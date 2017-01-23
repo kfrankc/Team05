@@ -1,16 +1,20 @@
 CC=c++
 
-#link -lboost_system library
+#compile flags
 CFLAGS = -std=c++0x -g -Wall 
 
 #location of boost library
-#INCLUDES = -I /include/boost
+#INCLUDES = -I /include/boost -I.
+INCLUDES = -I.
 
+#link -lboost_system library
 LIBS = -lboost_system 
 
-SRCS = async_tcp_echo_server.cc
+#.cc files
+SRCS = async_tcp_echo_server.cc webserver.cc config_parser.cc
 
-TARGET = server
+#target to compile
+TARGET = webserver
 
 all: $(TARGET)
 
