@@ -35,8 +35,8 @@ TEST(NginxConfigStatementTest, ToString) {
 
 
 TEST_F(NginxConfigParserStringTest, SimpleStatementConfig) {	
-    EXPECT_TRUE(ParseString("foo bar;"));
-    EXPECT_EQ(1, out_config_.statements_.size()) << "Config has only one statement.";
+    ASSERT_TRUE(ParseString("foo bar;"));
+    ASSERT_EQ(1, out_config_.statements_.size()) << "Config has only one statement.";
     EXPECT_EQ("foo", out_config_.statements_[0]->tokens_[0]) << "foo is the first token.";	
 }
 
@@ -57,16 +57,16 @@ TEST_F(NginxConfigParserStringTest, SimpleInvalidStatementsConfig) {
 
 
 TEST_F(NginxConfigParserStringTest, MultipleStatementsConfig) {
-    EXPECT_TRUE(ParseString("foo bar {foo bar; } foobar;"));
-    EXPECT_EQ(2, out_config_.statements_.size()) << "Config with two statements: one with child block and one normal.";
+    ASSERT_TRUE(ParseString("foo bar {foo bar; } foobar;"));
+    ASSERT_EQ(2, out_config_.statements_.size()) << "Config with two statements: one with child block and one normal.";
     EXPECT_EQ("foo bar {\n  foo bar;\n}\n", out_config_.statements_[0]->ToString(0));
 }
 
 
 TEST_F(NginxConfigParserStringTest, InnerStatementsConfig) {
-    EXPECT_TRUE(ParseString("foo bar {foo barr; bar foo;} foobar;"));
-    EXPECT_EQ(2, out_config_.statements_.size());
-    EXPECT_EQ(2, out_config_.statements_[0]->child_block_->statements_.size()) << "Child block has two statements.";
+    ASSERT_TRUE(ParseString("foo bar {foo barr; bar foo;} foobar;"));
+    ASSERT_EQ(2, out_config_.statements_.size());
+    ASSERT_EQ(2, out_config_.statements_[0]->child_block_->statements_.size()) << "Child block has two statements.";
     EXPECT_EQ("bar foo;\n", out_config_.statements_[0]->child_block_->statements_[1]->ToString(0));
     EXPECT_EQ("foo barr;\n", out_config_.statements_[0]->child_block_->statements_[0]->ToString(0));
 }
@@ -79,8 +79,8 @@ TEST_F(NginxConfigParserStringTest, CurlyConfigs) {
 
 
 TEST_F(NginxConfigParserStringTest, EmbedCurlyConfigs) {
-    EXPECT_TRUE(ParseString("foo bar { foo bar {fooo bar;} }"));
-    EXPECT_EQ(1, out_config_.statements_.size());
+    ASSERT_TRUE(ParseString("foo bar { foo bar {fooo bar;} }"));
+    ASSERT_EQ(1, out_config_.statements_.size());
     EXPECT_EQ(1, out_config_.statements_[0]->child_block_->statements_.size());
     EXPECT_EQ(1, out_config_.statements_[0]->child_block_->statements_[0]->child_block_->statements_.size());
 }
