@@ -8,9 +8,6 @@
 
 using boost::asio::ip::tcp;
 
-
-
-
 int main(int argc, char* argv[]) {
 
     try {
@@ -26,7 +23,7 @@ int main(int argc, char* argv[]) {
         int port = 0;
 
         for (size_t i = 0; i < config.statements_.size(); i++) {
-	    if (config.statements_[i]->tokens_[0] == "port") {
+            if (config.statements_[i]->tokens_[0] == "port") {
                 port = std::stoi(config.statements_[i]->tokens_[1]);
             } 
         }
