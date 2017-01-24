@@ -15,23 +15,34 @@ int main(int argc, char* argv[]) {
 
     try {
         if (argc != 2) {
-            std::cerr << "Usage: webserver <port>\n";
+            std::cerr << "Usage: webserver <config_file>\n";
             return 1;
         }
 
 
         NginxConfigParser config_parser;
         NginxConfig config;
-        config_parser.Parse("example_config", &config);
+        config_parser.Parse(argv[1], &config);
+	int port = 0;
+
+	for (size_t i = 0; i < config.statements_.size(); i++) {
+	    if (config.statements_[i]->tokens_[0] == "port") {
+                port = std::stoi(config.statements_[i]->tokens_[1]);
+	    } 
+	}
 
         printf("%s", config.ToString().c_str());
 
         boost::asio::io_service io_service;
+        
+	if (port == 0) {
+	    std::cerr << "Missing port <number>; in config file." << std::endl;
+	    return 1;
+        }
+        server s(io_service, port);
 
-        server s(io_service, std::atoi(argv[1]));
 
-
-        printf("Running server on port %s...\n", argv[1]);
+        printf("Running server on port %d...\n", port);
 
 
         io_service.run();
