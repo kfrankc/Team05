@@ -1,4 +1,4 @@
-CS130 Software Engineering: Winter 2017
+CS130 - Software Engineering - Winter 2017
 
 Team 05:
 	Alfred Lucero
@@ -6,6 +6,6 @@ Team 05:
 	Jordan Miller
 
 Description:
-	Creating a webserver using Boost with GTest Unit Testing, gcov Test 
-	Coverage, Bash Integration Testing, and nginx-inspired parsing of config
-	files - modeling HTTP Restful API
+	Creating a webserver using Boost with GTest Unit Testing, GCov Test 
+	Coverage, Bash Integration Testing, and Nginx-inspired parsing of config
+	files - modeling the HTTP Restful API
