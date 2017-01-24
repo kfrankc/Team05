@@ -19,7 +19,7 @@
 
 std::string NginxConfig::ToString(int depth) {
   std::string serialized_config;
-  for (const auto& statement : statements_) {
+  for (const auto& statement : statements) {
     serialized_config.append(statement->ToString(depth));
   }
   return serialized_config;
@@ -30,15 +30,15 @@ std::string NginxConfigStatement::ToString(int depth) {
   for (int i = 0; i < depth; ++i) {
     serialized_statement.append("  ");
   }
-  for (unsigned int i = 0; i < tokens_.size(); ++i) {
+  for (unsigned int i = 0; i < tokens.size(); ++i) {
     if (i != 0) {
       serialized_statement.append(" ");
     }
-    serialized_statement.append(tokens_[i]);
+    serialized_statement.append(tokens[i]);
   }
-  if (child_block_.get() != nullptr) {
+  if (child_block.get() != nullptr) {
     serialized_statement.append(" {\n");
-    serialized_statement.append(child_block_->ToString(depth + 1));
+    serialized_statement.append(child_block->ToString(depth + 1));
     for (int i = 0; i < depth; ++i) {
       serialized_statement.append("  ");
     }
@@ -175,10 +175,10 @@ bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
           last_token_type == TOKEN_TYPE_END_BLOCK ||
           last_token_type == TOKEN_TYPE_NORMAL) {
         if (last_token_type != TOKEN_TYPE_NORMAL) {
-          config_stack.top()->statements_.emplace_back(
+          config_stack.top()->statements.emplace_back(
               new NginxConfigStatement);
         }
-        config_stack.top()->statements_.back().get()->tokens_.push_back(
+        config_stack.top()->statements.back().get()->tokens.push_back(
             token);
       } else {
         // Error.
@@ -195,7 +195,7 @@ bool NginxConfigParser::Parse(std::istream* config_file, NginxConfig* config) {
         break;
       }
       NginxConfig* const new_config = new NginxConfig;
-      config_stack.top()->statements_.back().get()->child_block_.reset(
+      config_stack.top()->statements.back().get()->child_block.reset(
           new_config);
       config_stack.push(new_config);
     } else if (token_type == TOKEN_TYPE_END_BLOCK) {
