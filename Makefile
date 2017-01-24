@@ -1,26 +1,19 @@
-#CXX=g++
+# Name of the executable
+TARGET=server
 
-# compile flags
-CXXFLAGS = -std=c++11 -g -Wall -Werror
+# Compiler flags
+CXXFLAGS+=-std=c++11 -Wall -Werror
 
-# location of boost library
-#INCLUDES = -I /include/boost -I.
-INCLUDES = -I.
+# Linker flags
+LDFLAGS+=-lboost_system
 
-# link -lboost_system library
-LIBS = -lboost_system 
+# Source files
+SRC=main.cc server.cc config_parser.cc http_response.cc
 
-# .cc files
-SRCS = async_tcp_echo_server.cc webserver.cc config_parser.cc
+$(TARGET):
+	$(CXX) -o $@ $(SRC) $(CXXFLAGS) $(LDFLAGS)
 
-# target to compile
-TARGET = webserver
+.PHONY: clean
+clean:
+	$(RM) $(TARGET) $(OBJS)
 
-all: $(TARGET)
-
-$(TARGET): $(SRCS)
-	$(CXX) $(INCLUDES) $(SRCS) $(CXXFLAGS) $(LIBS) -o $@ 
-
-
-clean: 
-	$(RM) $(TARGET)
