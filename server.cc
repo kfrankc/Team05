@@ -59,7 +59,7 @@ void session::do_write(std::size_t length) {
                 for (std::size_t i = 0; i < len; i++) {
                     printf("%c", data[i]);
                 }
-                printf("==========\n\n\n");
+                printf("\n==========\n\n\n");
             }
         });
 }
