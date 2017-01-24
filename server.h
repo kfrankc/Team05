@@ -1,49 +1,56 @@
-// based off of: http://www.boost.org/doc/libs/1_54_0/doc/html/boost_asio/example/cpp11/echo/async_tcp_echo_server.cpp
-
-
-#ifndef ASYNC_TCP_ECHO_SERVER_H
-
-#define ASYNC_TCP_ECHO_SERVER_H
+#ifndef SERVER_H
+#define SERVER_H
 
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+
 using boost::asio::ip::tcp;
 
 
-class session
-  : public std::enable_shared_from_this<session>
-{
+// Represents a session between the server and a client
+class session : public std::enable_shared_from_this<session> {
 public:
-  session(tcp::socket socket);
 
-  void start();
+    // Constructor
+    session(tcp::socket sock);
+
+    // Starts the session between client and server
+    void start();
 
 private:
-  void do_read();
 
-  void do_write(std::size_t length);
+    // Max length of a single read from the client
+    enum { max_length = 1024 };
 
-  tcp::socket socket_;
-  enum { max_length = 1024 };
-  char data_[max_length];
-};
+    // Callback for when a client should have its data read
+    void do_read();
 
-class server 
-{
-public:
-  server(boost::asio::io_service& io_service, short port);
+    // Callback for when a client should be written to
+    void do_write(std::size_t length);
 
-private:
-  void do_accept();
-
-  tcp::acceptor acceptor_;
-  tcp::socket socket_;
+    char        data[max_length]; // Buffer used when reading data from client
+    tcp::socket socket;           // Used in boost.asio to represent a client
 };
 
 
+// Represents the server
+class server  {
+public:
 
+    // Constructor
+    server(boost::asio::io_service& io_service, short port);
 
-#endif
+private:
+
+    // Callback for when a client attempts to connect
+    void do_accept();
+
+    tcp::acceptor acceptor; // Used in boost.asio to take in new clients
+    tcp::socket   socket;   // Used in boost.asio to represent clients
+};
+
+#endif // SERVER_H
+
