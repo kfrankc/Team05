@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
     try {
         if (argc != 2) {
-            std::cerr << "Usage: webserver <config_file>\n";
+            std::cerr << "Usage: server <config_file>" << std::endl;
             return 1;
         }
 
@@ -23,21 +23,21 @@ int main(int argc, char* argv[]) {
         NginxConfigParser config_parser;
         NginxConfig config;
         config_parser.Parse(argv[1], &config);
-	int port = 0;
+        int port = 0;
 
-	for (size_t i = 0; i < config.statements_.size(); i++) {
+        for (size_t i = 0; i < config.statements_.size(); i++) {
 	    if (config.statements_[i]->tokens_[0] == "port") {
                 port = std::stoi(config.statements_[i]->tokens_[1]);
-	    } 
-	}
+            } 
+        }
 
         printf("%s", config.ToString().c_str());
 
         boost::asio::io_service io_service;
         
-	if (port == 0) {
-	    std::cerr << "Missing port <number>; in config file." << std::endl;
-	    return 1;
+        if (port == 0) {
+            std::cerr << "Missing port <number>; in config file." << std::endl;
+            return 1;
         }
         server s(io_service, port);
 
