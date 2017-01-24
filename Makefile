@@ -1,5 +1,5 @@
 # Name of the executable
-TARGET=server
+TARGET=webserver
 
 # Compiler flags
 CXXFLAGS+=-std=c++11 -Wall -Werror
