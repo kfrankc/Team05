@@ -14,7 +14,7 @@ int main(int argc, char* argv[]) {
     try {
         // Make sure a config file is passed to the program
         if (argc != 2) {
-            std::cerr << "Usage: server <config_file>" << std::endl;
+            std::cerr << "Usage: webserver <config_file>" << std::endl;
             return 1;
         }
 
