@@ -30,8 +30,11 @@ struct response {
         service_unavailable = 503
     };
 
-    // Gets a default response to a given status code
-    static response get_default_response(status_code status);
+    // Creates a default response for a given status code
+    static response default_response(status_code status);
+
+    // Creates a text/html response for the given text or html
+    static response text_or_html_response(std::string&& text_or_html);
 
     // Converts the response into buffers so that it can be sent to the client
     std::vector<boost::asio::const_buffer> to_buffers();

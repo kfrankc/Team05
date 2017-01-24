@@ -206,12 +206,27 @@ boost::asio::const_buffer to_buffer(response::status_code status) {
 } // namespace status_string
 
 
-// Gets a default response to a given status code
-response response::get_default_response(response::status_code status)
+// Creates a default response for a given status code
+response response::default_response(response::status_code status)
 {
     response r;
     r.status = status;
     r.content = default_responses::to_string(status);
+    r.headers.resize(2);
+    r.headers[0].name = "Content-Length";
+    r.headers[0].value = std::to_string(r.content.size());
+    r.headers[1].name = "Content-Type";
+    r.headers[1].value = "text/html";
+    return r;
+}
+
+
+// Creates a text/html response for the given text or html
+response response::text_or_html_response(std::string&& text_or_html)
+{
+    response r;
+    r.status = response::ok;
+    r.content = std::move(text_or_html);
     r.headers.resize(2);
     r.headers[0].name = "Content-Length";
     r.headers[0].value = std::to_string(r.content.size());
