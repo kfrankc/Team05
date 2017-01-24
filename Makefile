@@ -1,26 +1,26 @@
-CC=c++
+#CXX=g++
 
-#compile flags
-CFLAGS = -std=c++0x -g -Wall 
+# compile flags
+CXXFLAGS = -std=c++11 -g -Wall -Werror
 
-#location of boost library
+# location of boost library
 #INCLUDES = -I /include/boost -I.
 INCLUDES = -I.
 
-#link -lboost_system library
+# link -lboost_system library
 LIBS = -lboost_system 
 
-#.cc files
+# .cc files
 SRCS = async_tcp_echo_server.cc webserver.cc config_parser.cc
 
-#target to compile
+# target to compile
 TARGET = webserver
 
 all: $(TARGET)
 
 $(TARGET): $(SRCS)
-	$(CC) $(INCLUDES) $(SRCS) $(CFLAGS) $(LIBS) -o $@ 
+	$(CXX) $(INCLUDES) $(SRCS) $(CXXFLAGS) $(LIBS) -o $@ 
 
 
 clean: 
-	  $(RM) $(TARGET)
+	$(RM) $(TARGET)
