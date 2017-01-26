@@ -216,7 +216,7 @@ response response::default_response(response::status_code status)
     r.headers[0].name = "Content-Length";
     r.headers[0].value = std::to_string(r.content.size());
     r.headers[1].name = "Content-Type";
-    r.headers[1].value = "text/plain";
+    r.headers[1].value = "text/html";
     return r;
 }
 
