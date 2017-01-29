@@ -51,6 +51,13 @@ struct response {
 };
 
 
+namespace misc_string {
+
+// Strings used in forming an HTTP response
+const char field_separator[] = { ':', ' ' };
+const char crlf[] = { '\r', '\n' };
+
+} // namespace helper_strings
 
 
 namespace default_responses {

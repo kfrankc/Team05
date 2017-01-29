@@ -122,13 +122,6 @@ std::string to_string(response::status_code status)
 } // namespace default_responses
 
 
-namespace misc_string {
-
-// Strings used in forming an HTTP response
-const char field_separator[] = { ':', ' ' };
-const char crlf[] = { '\r', '\n' };
-
-} // namespace helper_strings
 
 
 namespace status_string {
