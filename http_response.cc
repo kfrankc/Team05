@@ -3,7 +3,7 @@
 
 namespace http {
 
-namespace default_responses {
+namespace default_responses{
 
 // Default message bodies for every status code in HTTP/1.0
 const char ok[] =
@@ -133,37 +133,6 @@ const char crlf[] = { '\r', '\n' };
 
 namespace status_string {
 
-// Status lines for every status code in HTTP/1.0
-const std::string ok =
-    "HTTP/1.0 200 OK\r\n";
-const std::string created =
-    "HTTP/1.0 201 Created\r\n";
-const std::string accepted =
-    "HTTP/1.0 202 Accepted\r\n";
-const std::string no_content =
-    "HTTP/1.0 204 No Content\r\n";
-const std::string moved_permanently =
-    "HTTP/1.0 301 Moved Permanently\r\n";
-const std::string moved_temporarily =
-    "HTTP/1.0 302 Moved Temporarily\r\n";
-const std::string not_modified =
-    "HTTP/1.0 304 Not Modified\r\n";
-const std::string bad_request =
-    "HTTP/1.0 400 Bad Request\r\n";
-const std::string unauthorized =
-    "HTTP/1.0 401 Unauthorized\r\n";
-const std::string forbidden =
-    "HTTP/1.0 403 Forbidden\r\n";
-const std::string not_found =
-    "HTTP/1.0 404 Not Found\r\n";
-const std::string internal_server_error =
-    "HTTP/1.0 500 Internal Server Error\r\n";
-const std::string not_implemented =
-    "HTTP/1.0 501 Not Implemented\r\n";
-const std::string bad_gateway =
-    "HTTP/1.0 502 Bad Gateway\r\n";
-const std::string service_unavailable =
-    "HTTP/1.0 503 Service Unavailable\r\n";
 
 // Gets status line for a given status code
 boost::asio::const_buffer to_buffer(response::status_code status) {
@@ -234,6 +203,35 @@ response response::text_or_html_response(std::string&& text_or_html)
     r.headers[1].value = "text/plain";
     return r;
 }
+
+response response::plain_text_response(std::string&& text_or_html)
+{
+    response r;
+    r.status = response::ok;
+    r.content = std::move(text_or_html);
+    r.headers.resize(2);
+    r.headers[0].name = "Content-Length";
+    r.headers[0].value = std::to_string(r.content.size());
+    r.headers[1].name = "Content-Type";
+    r.headers[1].value = "text/plain";
+    return r;
+}
+
+response response::html_text_response(std::string&& text_or_html)
+{
+    response r;
+    r.status = response::ok;
+    r.content = std::move(text_or_html);
+    r.headers.resize(2);
+    r.headers[0].name = "Content-Length";
+    r.headers[0].value = std::to_string(r.content.size());
+    r.headers[1].name = "Content-Type";
+    r.headers[1].value = "text/html";
+    return r;
+}
+
+
+
 
 
 // Converts the response into buffers so that it can be sent to the client

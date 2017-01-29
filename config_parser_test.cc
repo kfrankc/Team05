@@ -27,8 +27,8 @@ TEST(NginxConfigParserTest, SimpleConfigFile) {
 TEST(NginxConfigStatementTest, ToString) {
     NginxConfigStatement statement;
     
-    statement.tokens_.push_back("foo");
-    statement.tokens_.push_back("bar");
+    statement.tokens.push_back("foo");
+    statement.tokens.push_back("bar");
     
     EXPECT_EQ("foo bar;\n", statement.ToString(0));
 }
@@ -37,7 +37,7 @@ TEST(NginxConfigStatementTest, ToString) {
 TEST_F(NginxConfigParserStringTest, SimpleStatementConfig) {	
     ASSERT_TRUE(ParseString("foo bar;"));
     ASSERT_EQ(1, out_config.statements.size()) << "Config has only one statement.";
-    EXPECT_EQ("foo", out_config.statements[0]->tokens_[0]) << "foo is the first token.";	
+    EXPECT_EQ("foo", out_config.statements[0]->tokens[0]) << "foo is the first token.";	
 }
 
 
