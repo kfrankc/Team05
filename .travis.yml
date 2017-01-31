@@ -1,0 +1,13 @@
+# Enable C++ support
+language: cpp
+# Ubuntu 14.04 Trusty support
+sudo: required
+dist: trusty
+# Compiler selection: g++
+compiler:
+  - gcc
+# Download packages before running build 
+before_install:
+  - sudo apt-get install libboost-all-dev
+# Build steps
+script: make
