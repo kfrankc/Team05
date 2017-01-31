@@ -4,7 +4,7 @@
 #include <utility>
 #include <boost/asio.hpp>
 #include "server.h"
-#include "config_parser.h"
+#include "server_config_parser.h"
 
 using boost::asio::ip::tcp;
 
@@ -18,19 +18,10 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-        // Parses the config file
-        NginxConfigParser config_parser;
-        NginxConfig config;
-        config_parser.Parse(argv[1], &config);
-        
-        // Extracts the port number from the config file
-        int port = 0;
-        for (size_t i = 0; i < config.statements.size(); i++) {
-            if (config.statements[i]->tokens[0] == "port") {
-                port = std::stoi(config.statements[i]->tokens[1]);
-            } 
-        }
-        if (port == 0) {
+       
+        int port = port_number(argv[1]);
+
+        if (port == -1) {
             std::cerr << "Missing port <number> in config file" << std::endl;
             return 1;
         }
