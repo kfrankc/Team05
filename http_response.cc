@@ -169,8 +169,7 @@ boost::asio::const_buffer to_buffer(response::status_code status) {
 
 
 // Creates a default response for a given status code
-response response::default_response(response::status_code status)
-{
+response response::default_response(response::status_code status) {
     response r;
     r.status = status;
     r.content = default_responses::to_string(status);
@@ -184,8 +183,7 @@ response response::default_response(response::status_code status)
 
 
 // Creates a text/html response for the given text or html
-response response::text_or_html_response(std::string&& text_or_html)
-{
+response response::text_or_html_response(std::string&& text_or_html) {
     response r;
     r.status = response::ok;
     r.content = std::move(text_or_html);
@@ -197,8 +195,8 @@ response response::text_or_html_response(std::string&& text_or_html)
     return r;
 }
 
-response response::plain_text_response(std::string&& text_or_html)
-{
+// Creates a text/plain response for the given text or html
+response response::plain_text_response(std::string&& text_or_html) {
     response r;
     r.status = response::ok;
     r.content = std::move(text_or_html);
@@ -210,8 +208,8 @@ response response::plain_text_response(std::string&& text_or_html)
     return r;
 }
 
-response response::html_text_response(std::string&& text_or_html)
-{
+// Creates a text/html response for the given text or html
+response response::html_text_response(std::string&& text_or_html) {
     response r;
     r.status = response::ok;
     r.content = std::move(text_or_html);
