@@ -65,3 +65,4 @@ server_config_parser_test: test_setup server_config_parser.cc server_config_pars
 
 server_config_parser_gcov: server_config_parser_test
 	gcov -r server_config_parser.cc > server_config_parser_gcov.txt
+

@@ -46,7 +46,7 @@ void session::do_write(std::size_t length) {
 
     // Setup an HTTP response from the data received from the client
     http::response r =
-        http::response::text_or_html_response(std::string(data, length));
+        http::response::plain_text_response(std::string(data, length));
 
     // Send the response back to the client and then we're done
     boost::asio::async_write(socket, r.to_buffers(),

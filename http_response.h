@@ -33,14 +33,11 @@ struct response {
     // Creates a default response for a given status code
     static response default_response(status_code status);
 
-    // Creates a text/html response for the given text or html
-    static response text_or_html_response(std::string&& text_or_html);
+    // Creates a plain text response for the given text
+    static response plain_text_response(std::string&& text);
 
-    static response plain_text_response(std::string&& text_or_html);
-
-    static response html_text_response(std::string&& text_or_html);
-
-    
+    // Creates a text/html response for the given html
+    static response html_response(std::string&& html);
 
     // Converts the response into buffers so that it can be sent to the client
     std::vector<boost::asio::const_buffer> to_buffers();
@@ -66,9 +63,6 @@ namespace default_responses {
 std::string to_string(response::status_code status);
 
 } // namespace default_responses
-
-
-
 
 
 namespace status_string {
@@ -105,11 +99,7 @@ const std::string bad_gateway =
 const std::string service_unavailable =
     "HTTP/1.0 503 Service Unavailable\r\n";
 
-
 } // namespace status_string
-
-
-
 
 } // namespace http
 
