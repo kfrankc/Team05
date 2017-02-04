@@ -1,5 +1,5 @@
-#ifndef HTTP_RESPONSE_HPP
-#define HTTP_RESPONSE_HPP
+#ifndef HTTP_RESPONSE_H
+#define HTTP_RESPONSE_H
 
 #include <boost/asio.hpp>
 #include <string>
@@ -103,5 +103,5 @@ const std::string service_unavailable =
 
 } // namespace http
 
-#endif // HTTP_RESPONSE_HPP
+#endif // HTTP_RESPONSE_H
 

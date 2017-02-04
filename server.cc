@@ -28,38 +28,48 @@ void session::do_read() {
     auto self(shared_from_this());
 
     // Read up to max_length bytes from the client then write it back
-    socket.async_read_some(boost::asio::buffer(data, max_length),
+    socket.async_read_some(boost::asio::buffer(buf),
         [this, self](boost::system::error_code ec, std::size_t len) {
             // Check if an error has occurred during the connection
             if (!ec) {
-                // No error : move on to echoing the data to the client
-                do_write(len);
+                // No error : parse the data from the client
+                http::request_parser::result rslt;
+                std::tie(rslt, std::ignore) = parser.parse(
+                    request, buf.data(), buf.data() + len);
+                if (rslt == http::request_parser::good) {
+                    do_write();
+                } else if (rslt == http::request_parser::bad) {
+                    do_write();
+                } else {
+                    do_read();
+                }
             }
         });
 }
 
 
 // Callback for when a client should be written to
-void session::do_write(std::size_t length) {
+void session::do_write() {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 
     // Setup an HTTP response from the data received from the client
-    http::response r =
-        http::response::plain_text_response(std::string(data, length));
+    http::response res =
+        http::response::plain_text_response(std::string(request.string));
+
+    // Print out the data we're sending to the client
+    printf("Sending the following to %s\n",
+        socket.remote_endpoint().address().to_string().c_str());
+    printf("==========\n");
+    printf("%s\n", request.string.c_str());
+    printf("==========\n\n");
 
     // Send the response back to the client and then we're done
-    boost::asio::async_write(socket, r.to_buffers(),
+    boost::asio::async_write(socket, res.to_buffers(),
         [this, self](boost::system::error_code ec, std::size_t len) {
-            // Check if an error has occurred during the connection
             if (!ec) {
-                // No error : print out the data we sent to the client just now
-                printf("Echoed the following\n");
-                printf("==========\n");
-                for (std::size_t i = 0; i < len; i++) {
-                    printf("%c", data[i]);
-                }
-                printf("\n==========\n\n\n");
+                printf("Failed to send data to %s\n\n",
+                    socket.remote_endpoint().address().to_string().c_str());
             }
         });
 }
