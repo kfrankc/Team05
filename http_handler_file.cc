@@ -55,8 +55,8 @@ response handler_file::handle_request(const request& req) {
 
     // Open the file to send back
     std::string full_path = root + req.path;
-    std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
-    if (!is) {
+    std::ifstream file(full_path.c_str(), std::ios::in | std::ios::binary);
+    if (!file) {
         return response::default_response(response::not_found);
     }
 
@@ -64,8 +64,9 @@ response handler_file::handle_request(const request& req) {
     http::response res;
     res.status = response::ok;
     char buf[512];
-    while (is.read(buf, sizeof(buf)).gcount() > 0)
-        res.content.append(buf, is.gcount());
+    while (file.read(buf, sizeof(buf)).gcount() > 0) {
+        res.content.append(buf, file.gcount());
+    }
     res.headers.resize(2);
     res.headers[0].name = "Content-Length";
     res.headers[0].value = std::to_string(res.content.size());
