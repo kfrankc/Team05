@@ -40,7 +40,7 @@ struct response {
     static response html_response(std::string&& html);
 
     // Converts the response into buffers so that it can be sent to the client
-    std::vector<boost::asio::const_buffer> to_buffers();
+    std::vector<boost::asio::const_buffer> to_buffers() const;
 
     status_code         status;  // Status code for the response
     std::vector<header> headers; // Headers included in the response

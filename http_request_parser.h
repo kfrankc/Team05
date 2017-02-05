@@ -1,6 +1,7 @@
 #ifndef HTTP_REQUEST_PARSER_HPP
 #define HTTP_REQUEST_PARSER_HPP
 
+#include <string>
 #include <tuple>
 
 
@@ -22,6 +23,9 @@ public:
 
     // Default constructor
     request_parser();
+
+    // Performs a URL-decoding on a string and returns true if succeeded
+    static bool decode_url(const std::string& in, std::string& out);
 
     // Parses data. The enum return value is good when a complete request has
     // been parsed, bad if the data is invalid, and indeterminate when more data

@@ -3,7 +3,8 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-#include "http_response.h"
+#include "http_handler_echo.h"
+#include "http_handler_file.h"
 #include "server.h"
 
 using boost::asio::ip::tcp;
@@ -37,9 +38,17 @@ void session::do_read() {
                 std::tie(rslt, std::ignore) = parser.parse(
                     request, buf.data(), buf.data() + len);
                 if (rslt == http::request_parser::good) {
-                    do_write();
+                    // TODO: Use the config file to create'n'choose handlers
+                    if (request.path == "/echo") {
+                        http::handler_echo handler;
+                        do_write(handler.handle_request(request));
+                    } else {
+                        http::handler_file handler("./");
+                        do_write(handler.handle_request(request));
+                    }
                 } else if (rslt == http::request_parser::bad) {
-                    do_write();
+                    do_write(http::response::default_response(
+                        http::response::bad_request));
                 } else {
                     do_read();
                 }
@@ -49,13 +58,9 @@ void session::do_read() {
 
 
 // Callback for when a client should be written to
-void session::do_write() {
+void session::do_write(const http::response& res) {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
-
-    // Setup an HTTP response from the data received from the client
-    http::response res =
-        http::response::plain_text_response(std::string(request.string));
 
     // Print out the data we're sending to the client
     printf("Sending the following to %s\n",
@@ -67,7 +72,7 @@ void session::do_write() {
     // Send the response back to the client and then we're done
     boost::asio::async_write(socket, res.to_buffers(),
         [this, self](boost::system::error_code ec, std::size_t len) {
-            if (!ec) {
+            if (ec) {
                 printf("Failed to send data to %s\n\n",
                     socket.remote_endpoint().address().to_string().c_str());
             }

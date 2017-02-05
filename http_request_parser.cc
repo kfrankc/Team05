@@ -1,3 +1,4 @@
+#include <sstream>
 #include "http_request_parser.h"
 #include "http_request.h"
 
@@ -7,6 +8,34 @@ namespace http {
 // Default constructor
 request_parser::request_parser() {
     reset();
+}
+
+
+// Performs a URL-decoding on a string and returns true if succeeded
+bool request_parser::decode_url(const std::string& in, std::string& out) {
+    out.clear();
+    out.reserve(in.size());
+    for (std::size_t i = 0; i < in.size(); ++i) {
+        if (in[i] == '%') {
+            if (i + 3 <= in.size()) {
+                int value = 0;
+                std::istringstream is(in.substr(i + 1, 2));
+                if (is >> std::hex >> value) {
+                    out += static_cast<char>(value);
+                    i += 2;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else if (in[i] == '+') {
+            out += ' ';
+        } else {
+            out += in[i];
+        }
+    }
+    return true;
 }
 
 
@@ -186,7 +215,16 @@ request_parser::result request_parser::consume(request& req,
             return bad;
         }
     case expecting_newline_3:
-        return (input == '\n') ? good : bad;
+        if (input == '\n' && decode_url(req.uri, req.path) &&
+            !(req.path.empty() || req.path[0] != '/' ||
+            req.path.find("..") != std::string::npos)) {
+            // If path ends in slash (i.e. is a directory) then add "index.html"
+            if (req.path[req.path.size() - 1] == '/') req.path += "index.html";
+
+            return good;
+        } else {
+            return bad;
+        }
     default:
         return bad;
     }

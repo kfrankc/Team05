@@ -12,6 +12,7 @@ namespace http {
 struct request {
     std::string         method;  // Indicates what is to be performed
     std::string         uri;     // Identifies the resource for the request
+    std::string         path;    // URL converted to a path
     std::vector<header> headers; // Headers included in the request
     std::string         string;  // The entire, unparsed request as a string
 };

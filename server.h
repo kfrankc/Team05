@@ -8,6 +8,7 @@
 #include <boost/asio.hpp>
 #include "http_request.h"
 #include "http_request_parser.h"
+#include "http_response.h"
 
 using boost::asio::ip::tcp;
 
@@ -31,7 +32,7 @@ private:
     void do_read();
 
     // Callback for when a client should be written to
-    void do_write();
+    void do_write(const http::response& res);
 
     std::array<char, max_length> buf; // Buffer used when reading client data
     http::request_parser parser;      // Parser for incoming client requests

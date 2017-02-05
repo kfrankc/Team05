@@ -205,7 +205,7 @@ response response::html_response(std::string&& html) {
 }
 
 // Converts the response into buffers so that it can be sent to the client
-std::vector<boost::asio::const_buffer> response::to_buffers() {
+std::vector<boost::asio::const_buffer> response::to_buffers() const {
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(status_string::to_buffer(status));
     for (std::size_t i = 0; i < headers.size(); ++i) {
