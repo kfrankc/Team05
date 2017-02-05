@@ -1,7 +1,6 @@
 // This file is based on both the Boost HTTP server and Echo example at
 //  http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/examples/cpp11_examples.html
 
-
 #include <cstdlib>
 #include <iostream>
 #include <memory>
