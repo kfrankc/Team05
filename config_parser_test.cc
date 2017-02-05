@@ -2,7 +2,6 @@
 #include "config_parser.h"
 
 
-
 class NginxConfigParserStringTest : public ::testing::Test {
 protected:
     bool ParseString(const std::string config_string) {
@@ -12,7 +11,7 @@ protected:
 
     NginxConfigParser parser;
     NginxConfig out_config;
- };
+};
 
 
 TEST(NginxConfigParserTest, SimpleConfigFile) {
@@ -91,3 +90,4 @@ TEST_F(NginxConfigParserStringTest, UnbalancedCurlyConfigs) {
     EXPECT_FALSE(ParseString("foo bar {foo bar {foo bar; }"));
     EXPECT_FALSE(ParseString("foo bar foo bar; } } }"));
 }
+

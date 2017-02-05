@@ -1,3 +1,6 @@
+// This file is based on the Boost HTTP server example at
+//  http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/examples/cpp11_examples.html
+
 #include "http_response.h"
 
 
@@ -122,10 +125,7 @@ std::string to_string(response::status_code status)
 } // namespace default_responses
 
 
-
-
 namespace status_string {
-
 
 // Gets status line for a given status code
 boost::asio::const_buffer to_buffer(response::status_code status) {
@@ -181,25 +181,11 @@ response response::default_response(response::status_code status) {
     return r;
 }
 
-
-// Creates a text/html response for the given text or html
-response response::text_or_html_response(std::string&& text_or_html) {
-    response r;
-    r.status = response::ok;
-    r.content = std::move(text_or_html);
-    r.headers.resize(2);
-    r.headers[0].name = "Content-Length";
-    r.headers[0].value = std::to_string(r.content.size());
-    r.headers[1].name = "Content-Type";
-    r.headers[1].value = "text/plain";
-    return r;
-}
-
 // Creates a text/plain response for the given text or html
-response response::plain_text_response(std::string&& text_or_html) {
+response response::plain_text_response(std::string&& text) {
     response r;
     r.status = response::ok;
-    r.content = std::move(text_or_html);
+    r.content = std::move(text);
     r.headers.resize(2);
     r.headers[0].name = "Content-Length";
     r.headers[0].value = std::to_string(r.content.size());
@@ -209,10 +195,10 @@ response response::plain_text_response(std::string&& text_or_html) {
 }
 
 // Creates a text/html response for the given text or html
-response response::html_text_response(std::string&& text_or_html) {
+response response::html_response(std::string&& html) {
     response r;
     r.status = response::ok;
-    r.content = std::move(text_or_html);
+    r.content = std::move(html);
     r.headers.resize(2);
     r.headers[0].name = "Content-Length";
     r.headers[0].value = std::to_string(r.content.size());
@@ -221,12 +207,8 @@ response response::html_text_response(std::string&& text_or_html) {
     return r;
 }
 
-
-
-
-
 // Converts the response into buffers so that it can be sent to the client
-std::vector<boost::asio::const_buffer> response::to_buffers() {
+std::vector<boost::asio::const_buffer> response::to_buffers() const {
     std::vector<boost::asio::const_buffer> buffers;
     buffers.push_back(status_string::to_buffer(status));
     for (std::size_t i = 0; i < headers.size(); ++i) {

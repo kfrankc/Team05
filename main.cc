@@ -18,9 +18,8 @@ int main(int argc, char* argv[]) {
             return 1;
         }
 
-       
+        // Get the port number from the config file
         int port = port_number(argv[1]);
-
         if (port == -1) {
             std::cerr << "Missing port <number> in config file" << std::endl;
             return 1;

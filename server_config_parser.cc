@@ -1,6 +1,8 @@
 #include "server_config_parser.h"
 
-// returns the port number from; returns -1 if no number is found
+
+// Returns the port number from config_file or -1 if no number is found
+//   TODO: Put this in a class as a static method
 int port_number(const char* config_file) {
     int port = -1;
     NginxConfigParser config_parser;
@@ -13,3 +15,4 @@ int port_number(const char* config_file) {
     }
     return port;
 }
+

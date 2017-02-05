@@ -1,5 +1,5 @@
-#ifndef HTTP_HEADER_HPP
-#define HTTP_HEADER_HPP
+#ifndef HTTP_HEADER_H
+#define HTTP_HEADER_H
 
 #include <string>
 
@@ -14,5 +14,5 @@ struct header {
 
 } // namespace http
 
-#endif // HTTP_HEADER_HPP
+#endif // HTTP_HEADER_H
 
