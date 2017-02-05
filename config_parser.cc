@@ -1,4 +1,4 @@
-// An nginx config file parser
+// An nginx config file parser provided by CS130 professors
 //
 // See
 //   http://wiki.nginx.org/Configuration

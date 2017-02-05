@@ -1,3 +1,6 @@
+// This file is based on the Boost HTTP server example at
+//  http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/examples/cpp11_examples.html
+
 #include <sstream>
 #include "http_request_parser.h"
 #include "http_request.h"
