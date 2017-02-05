@@ -48,7 +48,7 @@ void request_parser::reset() {
 // Parses data
 request_parser::result request_parser::consume(request& req,
                                                       char input) {
-    req.string += input;
+    req.as_string += input;
     switch (state) {
     case method_start:
         if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {

@@ -66,7 +66,7 @@ void session::do_write(const http::response& res) {
     printf("Sending the following to %s\n",
         socket.remote_endpoint().address().to_string().c_str());
     printf("==========\n");
-    printf("%s\n", request.string.c_str());
+    printf("%s\n", request.as_string.c_str());
     printf("==========\n\n");
 
     // Send the response back to the client and then we're done

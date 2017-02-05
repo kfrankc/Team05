@@ -10,11 +10,11 @@ namespace http {
 
 // HTTP/1.0 request received from a client
 struct request {
-    std::string         method;  // Indicates what is to be performed
-    std::string         uri;     // Identifies the resource for the request
-    std::string         path;    // URL converted to a path
-    std::vector<header> headers; // Headers included in the request
-    std::string         string;  // The entire, unparsed request as a string
+    std::string         method;    // Indicates what is to be performed
+    std::string         uri;       // Identifies the resource for the request
+    std::string         path;      // URL converted to a path
+    std::vector<header> headers;   // Headers included in the request
+    std::string         as_string; // The entire, unparsed request as a string
 };
 
 } // namespace http

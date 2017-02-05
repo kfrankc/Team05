@@ -7,7 +7,7 @@ namespace http {
 
 // Echoes the request as plain text
 response handler_echo::handle_request(const request& req) {
-    return http::response::plain_text_response(std::string(req.string));
+    return http::response::plain_text_response(std::string(req.as_string));
 }
 
 } // namespace http
