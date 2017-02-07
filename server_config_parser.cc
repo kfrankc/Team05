@@ -47,4 +47,3 @@ server_config& server_settings_out) {
 
     return server_settings_out.port;
 }
-
