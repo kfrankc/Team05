@@ -15,7 +15,7 @@ curl_output_expected = [
 ec = 0
 
 # Open the web server in a subprocess
-webserver = Popen(["./webserver", "port_config"], stdout=PIPE)
+webserver = Popen(["./webserver", "sample_config"], stdout=PIPE)
 
 # Query the web server using curl
 curl = Popen(["curl", "-0", "-s", "localhost:1234/echo"], stdout=PIPE)
