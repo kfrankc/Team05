@@ -18,6 +18,7 @@ class Response {
  public:
   enum ResponseCode {
     // Define your HTTP response codes here.
+    OK = 200
   };
   
   void SetStatus(const ResponseCode response_code);

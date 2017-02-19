@@ -6,9 +6,12 @@
 #ifndef REQUEST_H
 #define REQUEST_H
 
+
+
+
 class Request {
  public:
-  static unique_ptr<Request> Parse(const std::string& raw_request);
+  static std::unique_ptr<Request> Parse(const std::string& raw_request);
 
   std::string raw_request() const;
   std::string method() const;

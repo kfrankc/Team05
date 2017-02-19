@@ -93,3 +93,9 @@ http_request_parser_test: test_setup http_request_parser_test.cc
 http_request_parser_gcov: http_request_parser_test
 	gcov -r http_request_parser.cc > http_request_parser_gcov.txt
 
+# Based off of https://github.com/jfarrell468/registerer
+registerer_example: clean_registerer_example
+	g++ -g -o $@ -std=c++11 echo_handler.cc static_file_handler.cc registerer_main.cc request_handler.cc
+
+clean_registerer_example:
+	$(RM) registerer_example
