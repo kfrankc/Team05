@@ -2,47 +2,10 @@
 // and add private data as appropriate. You may also need to modify or extend
 // the API when implementing the reverse proxy. Use your good judgment.
 
-// Represents an HTTP Request.
-//
-// Usage:
-//   auto request = Request::Parse(raw_request);
-class Request {
- public:
-  static unique_ptr<Request> Parse(const std::string& raw_request);
+#ifndef REQUEST_HANDLER_H
+#define REQUEST_HANDLER_H
 
-  std::string raw_request() const;
-  std::string method() const;
-  std::string uri() const;
-  std::string version() const;
 
-  using Headers = std::vector<std::pair<std::string, std::string>>;
-  Headers headers() const;
-
-  std::string body() const;
-};
-
-// Represents an HTTP response.
-//
-// Usage:
-//   Response r;
-//   r.SetStatus(RESPONSE_200);
-//   r.SetBody(...);
-//   return r.ToString();
-//
-// Constructed by the RequestHandler, after which the server should call ToString
-// to serialize.
-class Response {
- public:
-  enum ResponseCode {
-    // Define your HTTP response codes here.
-  };
-  
-  void SetStatus(const ResponseCode response_code);
-  void AddHeader(const std::string& header_name, const std::string& header_value);
-  void SetBody(const std::string& body);
-  
-  std::string ToString();
-};
 
 // Represents the parent of all request handlers. Implementations should expect to
 // be long lived and created at server constrution.
@@ -66,3 +29,7 @@ class RequestHandler {
   virtual Status HandleRequest(const Request& request,
                                Response* response) = 0;
 };
+
+
+
+#endif // REQUEST_HANDLER_H
