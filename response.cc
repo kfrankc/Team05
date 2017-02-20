@@ -319,22 +319,6 @@ Response Response::html_response(std::string&& html) {
     return r;
 }
 
-// Converts the Response into buffers so that it can be sent to the client
-std::vector<boost::asio::const_buffer> Response::to_buffers() const {
-    std::vector<boost::asio::const_buffer> buffers;
-    buffers.push_back(status_string::to_buffer(status));
-    for (std::size_t i = 0; i < headers.size(); ++i) {
-        // const header& h = headers[i];
-        buffers.push_back(boost::asio::buffer(headers[i].name));
-        buffers.push_back(boost::asio::buffer(misc_string::field_separator));
-        buffers.push_back(boost::asio::buffer(headers[i].value));
-        buffers.push_back(boost::asio::buffer(misc_string::crlf));
-    }
-    buffers.push_back(boost::asio::buffer(misc_string::crlf));
-    buffers.push_back(boost::asio::buffer(content));
-    return buffers;
-}
-
 std::string Response::ToString() const {
     std::string Response_string = "";
     Response_string += status_string::to_string(status);

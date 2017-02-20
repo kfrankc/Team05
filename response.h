@@ -53,9 +53,7 @@ class Response {
   // Creates a text/html response for the given html
   static Response html_response(std::string&& html);
 
-  // Converts the response into buffers so that it can be sent to the client
-  std::vector<boost::asio::const_buffer> to_buffers() const;
-
+  
 
   
   void SetStatus(const ResponseCode response_code);
