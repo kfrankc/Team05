@@ -8,13 +8,13 @@ protected:
     void VerifyContents(Response::ResponseCode status) {
         r = Response::default_response(status);
 
-        ASSERT_EQ(status, r.status);
-        ASSERT_EQ(default_responses::to_string(r.status), r.content);
-        ASSERT_EQ(2, r.headers.size());
-        EXPECT_EQ("Content-Length", r.headers[0].name);
-        EXPECT_EQ(std::to_string(r.content.size()), r.headers[0].value);
-        EXPECT_EQ("Content-Type", r.headers[1].name);
-        EXPECT_EQ("text/html", r.headers[1].value);
+        ASSERT_EQ(status, r.GetStatus());
+        ASSERT_EQ(default_responses::to_string(r.GetStatus()), r.GetBody());
+        ASSERT_EQ(2, r.GetHeaders().size());
+        EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
+        EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
+        EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
+        EXPECT_EQ("text/html", r.GetHeaders()[1].value);
     }
 
     Response r;
@@ -100,13 +100,13 @@ TEST(ResponseTest, html) {
     Response r = Response::html_response(
         default_responses::to_string(Response::ResponseCode::ok));
 
-    ASSERT_EQ(Response::ResponseCode::ok, r.status);
-    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.content);
-    ASSERT_EQ(2, r.headers.size());
-    EXPECT_EQ("Content-Length", r.headers[0].name);
-    EXPECT_EQ(std::to_string(r.content.size()), r.headers[0].value);
-    EXPECT_EQ("Content-Type", r.headers[1].name);
-    EXPECT_EQ("text/html", r.headers[1].value);
+    ASSERT_EQ(Response::ResponseCode::ok, r.GetStatus());
+    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.GetBody());
+    ASSERT_EQ(2, r.GetHeaders().size());
+    EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
+    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
+    EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
+    EXPECT_EQ("text/html", r.GetHeaders()[1].value);
 }
 
 
@@ -114,13 +114,13 @@ TEST(ResponseTest, plain) {
     Response r = Response::plain_text_response(
         default_responses::to_string(Response::ResponseCode::ok));
 
-    ASSERT_EQ(Response::ResponseCode::ok, r.status);
-    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.content);
-    ASSERT_EQ(2, r.headers.size());
-    EXPECT_EQ("Content-Length", r.headers[0].name);
-    EXPECT_EQ(std::to_string(r.content.size()), r.headers[0].value);
-    EXPECT_EQ("Content-Type", r.headers[1].name);
-    EXPECT_EQ("text/plain", r.headers[1].value);
+    ASSERT_EQ(Response::ResponseCode::ok, r.GetStatus());
+    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.GetBody());
+    ASSERT_EQ(2, r.GetHeaders().size());
+    EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
+    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
+    EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
+    EXPECT_EQ("text/plain", r.GetHeaders()[1].value);
 }
 
 
@@ -128,17 +128,17 @@ TEST(ToBufferTest, generaltest) {
     Response r = Response::plain_text_response(
         default_responses::to_string(Response::ResponseCode::ok));
 
-    ASSERT_EQ(Response::ResponseCode::ok, r.status);
-    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.content);
-    ASSERT_EQ(2, r.headers.size());
-    EXPECT_EQ("Content-Length", r.headers[0].name);
-    EXPECT_EQ(std::to_string(r.content.size()), r.headers[0].value);
-    EXPECT_EQ("Content-Type", r.headers[1].name);
-    EXPECT_EQ("text/plain", r.headers[1].value);
+    ASSERT_EQ(Response::ResponseCode::ok, r.GetStatus());
+    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.GetBody());
+    ASSERT_EQ(2, r.GetHeaders().size());
+    EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
+    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
+    EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
+    EXPECT_EQ("text/plain", r.GetHeaders()[1].value);
 
     std::vector<boost::asio::const_buffer> buffers = r.to_buffers();
 
-    ASSERT_EQ(1 + r.headers.size() * 4 + 2, buffers.size());
+    ASSERT_EQ(1 + r.GetHeaders().size() * 4 + 2, buffers.size());
 }
 
 
@@ -146,13 +146,13 @@ TEST(ToStringTest, generaltest) {
     Response r = Response::plain_text_response(
         default_responses::to_string(Response::ResponseCode::ok));
 
-    ASSERT_EQ(Response::ResponseCode::ok, r.status);
-    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.content);
-    ASSERT_EQ(2, r.headers.size());
-    EXPECT_EQ("Content-Length", r.headers[0].name);
-    EXPECT_EQ(std::to_string(r.content.size()), r.headers[0].value);
-    EXPECT_EQ("Content-Type", r.headers[1].name);
-    EXPECT_EQ("text/plain", r.headers[1].value);
+    ASSERT_EQ(Response::ResponseCode::ok, r.GetStatus());
+    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.GetBody());
+    ASSERT_EQ(2, r.GetHeaders().size());
+    EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
+    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
+    EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
+    EXPECT_EQ("text/plain", r.GetHeaders()[1].value);
 
 
     EXPECT_EQ("HTTP/1.0 200 OK\r\nContent-Length: 0\r\nContent-Type: text/plain\r\n\r\n", r.ToString());

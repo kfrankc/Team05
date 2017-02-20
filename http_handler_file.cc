@@ -87,16 +87,21 @@ Response handler_file::handle_request(const request& req) {
 
     // Fill out the response to be sent to the client
     Response res;
-    res.status = Response::ok;
+    res.SetStatus(Response::ok);
+    std::string res_body;
+    // res.status = Response::ok;
     char buf[512];
     while (file.read(buf, sizeof(buf)).gcount() > 0) {
-        res.content.append(buf, file.gcount());
+        res_body.append(buf, file.gcount());
     }
-    res.headers.resize(2);
-    res.headers[0].name = "Content-Length";
-    res.headers[0].value = std::to_string(res.content.size());
-    res.headers[1].name = "Content-Type";
-    res.headers[1].value = extension_to_type(extension);
+    res.SetBody(res_body);
+    // res.headers.resize(2);
+    res.AddHeader("Content-Length", std::to_string(res.GetBody().size()));
+    res.AddHeader("Content-Type", extension_to_type(extension));
+    // res.headers[0].name = "Content-Length";
+    // res.headers[0].value = std::to_string(res.content.size());
+    // res.headers[1].name = "Content-Type";
+    // res.headers[1].value = extension_to_type(extension);
 
     return res;
 }

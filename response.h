@@ -43,6 +43,20 @@ class Response {
     bad_gateway = 502,
     service_unavailable = 503
   };
+
+    // Creates a default response for a given status code
+  static Response default_response(ResponseCode status);
+
+  // Creates a plain text response for the given text
+  static Response plain_text_response(std::string&& text);
+
+  // Creates a text/html response for the given html
+  static Response html_response(std::string&& html);
+
+  // Converts the response into buffers so that it can be sent to the client
+  std::vector<boost::asio::const_buffer> to_buffers() const;
+
+
   
   void SetStatus(const ResponseCode response_code);
   void AddHeader(const std::string& header_name, const std::string& header_value);
@@ -51,20 +65,15 @@ class Response {
   std::string ToString() const;
 
 
-// Creates a default response for a given status code
-    static Response default_response(ResponseCode status);
 
-    // Creates a plain text response for the given text
-    static Response plain_text_response(std::string&& text);
-
-    // Creates a text/html response for the given html
-    static Response html_response(std::string&& html);
-
-    // Converts the response into buffers so that it can be sent to the client
-    std::vector<boost::asio::const_buffer> to_buffers() const;
+  using Headers = std::vector<std::pair<std::string, std::string>>;
+  Headers GetHeaders() const;
+  ResponseCode GetStatus() const;
+  std::string GetBody() const;
 
 
- // private:
+
+ private:
   ResponseCode status; // Status code of the http response
   std::vector<std::pair<std::string, std::string>> headers; // Vector of headers for the http response
   std::string content; // Body of http response

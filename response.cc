@@ -18,6 +18,19 @@ void Response::SetBody(const std::string& body) {
 }
 
 
+Response::Headers Response::GetHeaders() const {
+    return this->headers;
+}
+
+Response::ResponseCode Response::GetStatus() const {
+    return this->status;
+}
+
+std::string Response::GetBody() const {
+    return this->content;
+}
+
+
 namespace misc_string {
 
 // Strings used in forming an HTTP Response
