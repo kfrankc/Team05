@@ -95,7 +95,11 @@ http_request_parser_gcov: http_request_parser_test
 
 # Based off of https://github.com/jfarrell468/registerer
 registerer_example: clean_registerer_example
-	g++ -g -o $@ -std=c++11 echo_handler.cc static_file_handler.cc registerer_main.cc request_handler.cc
+	g++ -g -o $@ -std=c++11 echo_handler.cc static_file_handler.cc registerer_main.cc request_handler.cc response.cc $(CXXFLAGS) $(LDFLAGS)
 
 clean_registerer_example:
 	$(RM) registerer_example
+
+response_test: test_setup response.cc response_test.cc
+	g++ $(GCOVFLAGS) $(TESTFLAGS) response_test.cc response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	./$@

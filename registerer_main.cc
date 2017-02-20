@@ -16,7 +16,7 @@ int main(int arc, char** argv) {
   handler->Init(str, config);
   handler->HandleRequest(request, &response);
   handler = RequestHandler::CreateByName("StaticFileHandler");
-  handler->HandleRequest(request, &response);
   handler->Init(str, config);
+  handler->HandleRequest(request, &response);
   return 0;
 }

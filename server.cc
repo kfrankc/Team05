@@ -80,8 +80,13 @@ void session::do_write(const http::response& res) {
     printf("==========\n\n");
 
     // Send the response back to the client and then we're done
-    boost::asio::async_write(socket, res.to_buffers(),
+    // boost::asio::async_write(socket, res.to_buffers(),
+    std::string res_string = res.ToString();
+    std::vector<boost::asio::const_buffer> testb;
+    testb.push_back(boost::asio::buffer(res_string, res_string.size()));
+    boost::asio::async_write(socket, boost::asio::buffer(res_string, res_string.size()),
         [this, self](boost::system::error_code ec, std::size_t len) {
+            printf("Amount of data written:%zu\n\n", len);
             if (ec) {
                 printf("Failed to send data to %s\n\n",
                     socket.remote_endpoint().address().to_string().c_str());
