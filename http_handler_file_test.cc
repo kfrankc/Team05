@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 #include "http_handler_file.h"
 #include "http_request.h"
-#include "http_response.h"
+#include "response.h"
 
 
 
@@ -34,7 +34,7 @@ TEST_F(HttpHandlerFileTest, FileExists) {
     http::handler_file hf("/", "/static1");
 
 
-    http::response res = hf.handle_request(r);
+    Response res = hf.handle_request(r);
 
 
     //Delete the file
@@ -46,7 +46,7 @@ TEST_F(HttpHandlerFileTest, FileExists) {
     EXPECT_EQ("Content-Type", res.headers[1].name);
     EXPECT_EQ("text/plain", res.headers[1].value);
     EXPECT_EQ(text_contents, res.content);
-    EXPECT_EQ(http::response::status_code::ok, res.status);
+    EXPECT_EQ(Response::ResponseCode::ok, res.status);
 
     
 }
@@ -69,7 +69,7 @@ TEST_F(HttpHandlerFileTest, WrongHandlerCalled) {
     http::handler_file hf("/", "/static1");
 
 
-    http::response res = hf.handle_request(r);
+    Response res = hf.handle_request(r);
 
     // Delete the file
     remove(name);
@@ -77,7 +77,7 @@ TEST_F(HttpHandlerFileTest, WrongHandlerCalled) {
     EXPECT_EQ("Content-Length", res.headers[0].name);
     EXPECT_EQ("Content-Type", res.headers[1].name);
     EXPECT_EQ("text/html", res.headers[1].value);
-    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    EXPECT_EQ(Response::ResponseCode::internal_server_error, res.status);
     
 }
 
@@ -88,12 +88,12 @@ TEST_F(HttpHandlerFileTest, NoFileAskedFor) {
     http::handler_file hf("/", "/static1");
 
 
-    http::response res = hf.handle_request(r);
+    Response res = hf.handle_request(r);
 
 
     EXPECT_EQ("Content-Length", res.headers[0].name);
     EXPECT_EQ("Content-Type", res.headers[1].name);
-    EXPECT_EQ(http::response::status_code::not_found, res.status);
+    EXPECT_EQ(Response::ResponseCode::not_found, res.status);
 
 }
 
@@ -104,12 +104,12 @@ TEST_F(HttpHandlerFileTest, FileDoesNotExit) {
     http::handler_file hf("/", "/static1");
 
 
-    http::response res = hf.handle_request(r);
+    Response res = hf.handle_request(r);
 
 
     EXPECT_EQ("Content-Length", res.headers[0].name);
     EXPECT_EQ("Content-Type", res.headers[1].name);
-    EXPECT_EQ(http::response::status_code::not_found, res.status);
+    EXPECT_EQ(Response::ResponseCode::not_found, res.status);
 
 }
 
@@ -118,14 +118,14 @@ TEST_F(HttpHandlerFileTest, InvalidBaseUrl) {
     form_request("");
     http::handler_file hf("/", "/static1");
 
-    http::response res = hf.handle_request(r);
+    Response res = hf.handle_request(r);
 
-    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    EXPECT_EQ(Response::ResponseCode::internal_server_error, res.status);
 
     form_request("Makefile");
 
     res = hf.handle_request(r);
-    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    EXPECT_EQ(Response::ResponseCode::internal_server_error, res.status);
 
 }
 

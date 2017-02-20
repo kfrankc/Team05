@@ -3,10 +3,11 @@
 
 
 #include <string>
+#include "response.h"
 
 namespace http {
 
-struct response;
+
 struct request;
 
 
@@ -21,7 +22,7 @@ public:
     virtual ~handler() {};    
 
     // Returns a response to the given request
-    virtual response handle_request(const request& req) = 0;
+    virtual Response handle_request(const request& req) = 0;
 
     std::string base_url; // Base url that corresponds to this handler
 };

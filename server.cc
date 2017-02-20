@@ -54,11 +54,11 @@ void session::do_read() {
                     }
 
                     // If can't find match, return response not found
-                    do_write(http::response::default_response(http::response::not_found));
+                    do_write(Response::default_response(Response::not_found));
 
                 } else if (rslt == http::request_parser::bad) {
-                    do_write(http::response::default_response(
-                        http::response::bad_request));
+                    do_write(Response::default_response(
+                        Response::bad_request));
                 } else {
                     do_read();
                 }
@@ -68,7 +68,7 @@ void session::do_read() {
 
 
 // Callback for when a client should be written to
-void session::do_write(const http::response& res) {
+void session::do_write(const Response& res) {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 

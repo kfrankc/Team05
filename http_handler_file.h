@@ -18,7 +18,7 @@ public:
     handler_file(const std::string& doc_root, const std::string& base_url);
 
     // Responds with the file requested or an error page
-    response handle_request(const request& req);
+    Response handle_request(const request& req);
 
 private:
 

@@ -8,7 +8,7 @@
 #include <boost/asio.hpp>
 #include "http_request.h"
 #include "http_request_parser.h"
-#include "http_response.h"
+#include "response.h"
 #include "http_handler_echo.h"
 #include "http_handler_file.h"
 
@@ -35,7 +35,7 @@ private:
     void do_read();
 
     // Callback for when a client should be written to
-    void do_write(const http::response& res);
+    void do_write(const Response& res);
 
     // Reference to the vector of request handlers
     const std::vector<std::unique_ptr<http::handler> >& handlers;

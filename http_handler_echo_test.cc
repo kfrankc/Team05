@@ -23,9 +23,9 @@ TEST_F(HttpHandlerEchoTest, SimpleEcho) {
     http::handler_echo hf("/echo");
     form_request("/echo/Makefile");
 
-    http::response res1 = hf.handle_request(r);
+    Response res1 = hf.handle_request(r);
 
-    http::response res2 = http::response::plain_text_response(std::string(r.as_string));
+    Response res2 = Response::plain_text_response(std::string(r.as_string));
 
     EXPECT_EQ(res1.headers[0].name, res1.headers[0].name);
     EXPECT_EQ(res2.headers[0].value, res1.headers[0].value);
@@ -44,13 +44,13 @@ TEST_F(HttpHandlerEchoTest, InvalidBaseUrl) {
     form_request("");
     http::handler_echo hf("/echo");
 
-    http::response res = hf.handle_request(r);
+    Response res = hf.handle_request(r);
 
-    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    EXPECT_EQ(Response::ResponseCode::internal_server_error, res.status);
 
     form_request("Makefile");
 
     res = hf.handle_request(r);
-    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    EXPECT_EQ(Response::ResponseCode::internal_server_error, res.status);
 
 }

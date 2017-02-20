@@ -2,11 +2,11 @@
 #define HTTP_HANDLER_ECHO_HPP
 
 #include "http_handler.h"
-
+#include "response.h"
 
 namespace http {
 
-struct response;
+
 struct request;
 
 
@@ -17,7 +17,7 @@ public:
     handler_echo(const std::string& base_url) : handler(base_url) {}; 
 
     // Echoes the request as plain text
-    response handle_request(const request& req);
+    Response handle_request(const request& req);
 };
 
 } // namespace http
