@@ -5,7 +5,7 @@
 #include "http_handler_echo.h"
 #include "http_handler_file.h"
 
-struct server_config {
+struct ServerSettings {
     int port;
     // TODO: Add in more server specific configurations here
 };
