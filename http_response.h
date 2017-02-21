@@ -42,6 +42,8 @@ struct response {
     // Converts the response into buffers so that it can be sent to the client
     std::vector<boost::asio::const_buffer> to_buffers() const;
 
+    std::string ToString() const;
+
     status_code         status;  // Status code for the response
     std::vector<header> headers; // Headers included in the response
     std::string         content; // Body of the response

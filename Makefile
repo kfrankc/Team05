@@ -2,9 +2,9 @@
 TARGET=webserver
 
 # Test executables
-TESTEXEC=config_parser_test server_config_parser_test http_response_test \
+TESTEXEC=config_parser_test server_config_parser_test response_test \
 http_handler_file_test http_handler_echo_test http_request_parser_test
-GCOVEXEC=config_parser_gcov server_config_parser_gcov http_response_gcov \
+GCOVEXEC=config_parser_gcov server_config_parser_gcov response_gcov \
 http_handler_file_gcov http_handler_echo_gcov http_request_parser_gcov
 
 # GoogleTest directory and output files
@@ -25,7 +25,7 @@ LDFLAGS+=-lboost_system
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
 
 # Source files
-SRC=main.cc server.cc config_parser.cc http_response.cc \
+SRC=main.cc server.cc config_parser.cc response.cc \
 server_config_parser.cc http_request_parser.cc http_handler_echo.cc \
 http_handler_file.cc
 
@@ -58,29 +58,36 @@ config_parser_test: test_setup config_parser.cc config_parser_test.cc
 config_parser_gcov: config_parser_test
 	gcov -r config_parser.cc > config_parser_gcov.txt
 
-http_response_test: test_setup http_response.cc http_response_test.cc
-	g++ $(GCOVFLAGS) $(TESTFLAGS) http_response_test.cc http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+#http_response_test: test_setup http_response.cc http_response_test.cc
+#	g++ $(GCOVFLAGS) $(TESTFLAGS) http_response_test.cc http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+#	./$@
+
+#http_response_gcov: http_response_test
+#	gcov -r http_response.cc > http_response_gcov.txt
+
+response_test: test_setup response.cc response_test.cc
+	g++ $(GCOVFLAGS) $(TESTFLAGS) response_test.cc response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
-http_response_gcov: http_response_test
-	gcov -r http_response.cc > http_response_gcov.txt
+response_gcov: response_test
+	gcov -r response.cc > response_gcov.txt	
 
 server_config_parser_test: test_setup server_config_parser.cc server_config_parser_test.cc
-	g++ $(GCOVFLAGS) $(TESTFLAGS) server_config_parser_test.cc server_config_parser.cc config_parser.cc http_handler_file.cc http_handler_echo.cc http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	g++ $(GCOVFLAGS) $(TESTFLAGS) server_config_parser_test.cc server_config_parser.cc config_parser.cc http_handler_file.cc http_handler_echo.cc response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
 server_config_parser_gcov: server_config_parser_test
 	gcov -r server_config_parser.cc > server_config_parser_gcov.txt
 
 http_handler_file_test: test_setup http_handler_file.cc
-	g++ $(GCOVFLAGS) $(TESTFLAGS) http_handler_file_test.cc http_handler_file.cc http_request.h http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	g++ $(GCOVFLAGS) $(TESTFLAGS) http_handler_file_test.cc http_handler_file.cc http_request.h response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
 http_handler_file_gcov: http_handler_file_test
 	gcov -r http_handler_file.cc > http_handler_file_gcov.txt
 
 http_handler_echo_test: test_setup http_handler_echo.cc
-	g++ $(GCOVFLAGS) $(TESTFLAGS) http_handler_echo_test.cc http_handler_echo.cc http_request.h http_response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	g++ $(GCOVFLAGS) $(TESTFLAGS) http_handler_echo_test.cc http_handler_echo.cc http_request.h response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
 	./$@
 
 http_handler_echo_gcov: http_handler_echo_test
@@ -92,4 +99,12 @@ http_request_parser_test: test_setup http_request_parser_test.cc
 
 http_request_parser_gcov: http_request_parser_test
 	gcov -r http_request_parser.cc > http_request_parser_gcov.txt
+
+# Based off of https://github.com/jfarrell468/registerer
+registerer_example: clean_registerer_example
+	g++ -g -o $@ -std=c++11 echo_handler.cc static_file_handler.cc registerer_main.cc request_handler.cc response.cc $(CXXFLAGS) $(LDFLAGS)
+
+clean_registerer_example:
+	$(RM) registerer_example
+
 

@@ -54,11 +54,11 @@ void session::do_read() {
                     }
 
                     // If can't find match, return response not found
-                    do_write(http::response::default_response(http::response::not_found));
+                    do_write(Response::default_response(Response::not_found));
 
                 } else if (rslt == http::request_parser::bad) {
-                    do_write(http::response::default_response(
-                        http::response::bad_request));
+                    do_write(Response::default_response(
+                        Response::bad_request));
                 } else {
                     do_read();
                 }
@@ -68,7 +68,7 @@ void session::do_read() {
 
 
 // Callback for when a client should be written to
-void session::do_write(const http::response& res) {
+void session::do_write(const Response& res) {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 
@@ -79,9 +79,11 @@ void session::do_write(const http::response& res) {
     printf("%s\n", request.as_string.c_str());
     printf("==========\n\n");
 
-    // Send the response back to the client and then we're done
-    boost::asio::async_write(socket, res.to_buffers(),
+    // Send the response back to the client and then we're done   
+    std::string res_string = res.ToString();
+    boost::asio::async_write(socket, boost::asio::buffer(res_string, res_string.size()),
         [this, self](boost::system::error_code ec, std::size_t len) {
+            printf("Amount of data written:%zu\n\n", len);
             if (ec) {
                 printf("Failed to send data to %s\n\n",
                     socket.remote_endpoint().address().to_string().c_str());

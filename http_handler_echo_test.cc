@@ -23,16 +23,16 @@ TEST_F(HttpHandlerEchoTest, SimpleEcho) {
     http::handler_echo hf("/echo");
     form_request("/echo/Makefile");
 
-    http::response res1 = hf.handle_request(r);
+    Response res1 = hf.handle_request(r);
 
-    http::response res2 = http::response::plain_text_response(std::string(r.as_string));
+    Response res2 = Response::plain_text_response(std::string(r.as_string));
 
-    EXPECT_EQ(res1.headers[0].name, res1.headers[0].name);
-    EXPECT_EQ(res2.headers[0].value, res1.headers[0].value);
-    EXPECT_EQ(res2.headers[1].name, res1.headers[1].name);
-    EXPECT_EQ(res2.headers[1].value, res1.headers[1].value);
-    EXPECT_EQ(res2.content, res1.content);
-    EXPECT_EQ(res2.status, res1.status);
+    EXPECT_EQ(res1.GetHeaders()[0].name, res1.GetHeaders()[0].name);
+    EXPECT_EQ(res2.GetHeaders()[0].value, res1.GetHeaders()[0].value);
+    EXPECT_EQ(res2.GetHeaders()[1].name, res1.GetHeaders()[1].name);
+    EXPECT_EQ(res2.GetHeaders()[1].value, res1.GetHeaders()[1].value);
+    EXPECT_EQ(res2.GetBody(), res1.GetBody());
+    EXPECT_EQ(res2.GetStatus(), res1.GetStatus());
     
 
 
@@ -44,13 +44,13 @@ TEST_F(HttpHandlerEchoTest, InvalidBaseUrl) {
     form_request("");
     http::handler_echo hf("/echo");
 
-    http::response res = hf.handle_request(r);
+    Response res = hf.handle_request(r);
 
-    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    EXPECT_EQ(Response::ResponseCode::internal_server_error, res.GetStatus());
 
     form_request("Makefile");
 
     res = hf.handle_request(r);
-    EXPECT_EQ(http::response::status_code::internal_server_error, res.status);
+    EXPECT_EQ(Response::ResponseCode::internal_server_error, res.GetStatus());
 
 }

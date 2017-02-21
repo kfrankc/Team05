@@ -4,7 +4,7 @@
 #include <fstream>
 #include "http_handler_file.h"
 #include "http_request.h"
-#include "http_response.h"
+#include "response.h"
 
 
 namespace http {
@@ -45,10 +45,10 @@ handler_file::handler_file(const std::string& doc_root, const std::string& base_
 
 
 // Responds with the file requested or an error page
-response handler_file::handle_request(const request& req) {
+Response handler_file::handle_request(const request& req) {
     // If base url is  not formatted correctly
     if (req.path.length() == 0 || req.path[0] != '/') {
-        return response::default_response(response::internal_server_error);
+        return Response::default_response(Response::internal_server_error);
     }
 
     // Determine the file extension
@@ -64,14 +64,14 @@ response handler_file::handle_request(const request& req) {
 
     // If the base url's do not match, this handler should not have been called
     if (reqs_base_url != this->base_url) {
-        return response::default_response(response::internal_server_error);
+        return Response::default_response(Response::internal_server_error);
     }
 
     std::string file_path = req.path.substr(this->base_url.length());
 
     // For if base url is provided by user but nothing else
     if (file_path == "") {
-        return response::default_response(response::not_found);
+        return Response::default_response(Response::not_found);
     }
 
     // Open the file to send back
@@ -82,21 +82,26 @@ response handler_file::handle_request(const request& req) {
 
     std::ifstream file(full_path.c_str(), std::ios::in | std::ios::binary);
     if (!file) {
-        return response::default_response(response::not_found);
+        return Response::default_response(Response::not_found);
     }
 
     // Fill out the response to be sent to the client
-    http::response res;
-    res.status = response::ok;
+    Response res;
+    res.SetStatus(Response::ok);
+    std::string res_body;
+    // res.status = Response::ok;
     char buf[512];
     while (file.read(buf, sizeof(buf)).gcount() > 0) {
-        res.content.append(buf, file.gcount());
+        res_body.append(buf, file.gcount());
     }
-    res.headers.resize(2);
-    res.headers[0].name = "Content-Length";
-    res.headers[0].value = std::to_string(res.content.size());
-    res.headers[1].name = "Content-Type";
-    res.headers[1].value = extension_to_type(extension);
+    res.SetBody(res_body);
+    // res.headers.resize(2);
+    res.AddHeader("Content-Length", std::to_string(res.GetBody().size()));
+    res.AddHeader("Content-Type", extension_to_type(extension));
+    // res.headers[0].name = "Content-Length";
+    // res.headers[0].value = std::to_string(res.content.size());
+    // res.headers[1].name = "Content-Type";
+    // res.headers[1].value = extension_to_type(extension);
 
     return res;
 }

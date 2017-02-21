@@ -1,0 +1,17 @@
+#Note:
+#  Order of path blocks in the config file doesn't matter.
+#  Matching is by longest prefix.
+#  Duplicate paths in the config are illegal.
+
+# This is a comment.
+
+port 2020;  # This is also a comment.
+
+path / StaticHandler {
+  root /foo/bar;
+}
+
+path /echo EchoHandler {}
+
+# Default response handler if no handlers match.
+default NotFoundHandler {}
