@@ -9,14 +9,11 @@ void Response::SetStatus(const ResponseCode Response_code) {
 
 void Response::AddHeader(const std::string& header_name, const std::string& header_value) {
     this->headers.push_back(std::make_pair(header_name, header_value));
-
 }
 
 void Response::SetBody(const std::string& body) {
     this->content = body;
-
 }
-
 
 Response::Headers Response::GetHeaders() const {
     return this->headers;
@@ -320,20 +317,18 @@ Response Response::html_response(std::string&& html) {
 }
 
 std::string Response::ToString() const {
-    std::string Response_string = "";
-    Response_string += status_string::to_string(status);
+    std::string response_string = "";
+    response_string += status_string::to_string(status);
     for (std::size_t i = 0; i < headers.size(); ++i) {
         const header& h = headers[i];
-        Response_string += (h.name);
-        Response_string += std::string(misc_string::field_separator, sizeof(misc_string::field_separator));
-        Response_string += (h.value);
-        Response_string += std::string(misc_string::crlf, sizeof(misc_string::crlf));
+        response_string += (h.name);
+        response_string += std::string(misc_string::field_separator, sizeof(misc_string::field_separator));
+        response_string += (h.value);
+        response_string += std::string(misc_string::crlf, sizeof(misc_string::crlf));
     }
 
-    Response_string += (misc_string::crlf);
-    Response_string += (content);
-    return Response_string;
-
-
+    response_string += (misc_string::crlf);
+    response_string += (content);
+    return response_string;
 }
 

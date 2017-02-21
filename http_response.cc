@@ -263,9 +263,6 @@ std::vector<boost::asio::const_buffer> response::to_buffers() const {
     return buffers;
 }
 
-
-
-
 std::string response::ToString() const {
     std::string response_string = "";
     response_string += status_string::to_string(status);
@@ -280,7 +277,6 @@ std::string response::ToString() const {
     response_string += (misc_string::crlf);
     response_string += (content);
     return response_string;
-
 
 }
 

@@ -27,7 +27,7 @@ TEST_F(HttpHandlerFileTest, FileExists) {
     // Creates a temporary file using name, replacing the last 6 X's 
     fd = mkstemp(name);
 
-    // Write the config_contents into the temp file
+    // Write the text_contents into the temp file
     write(fd, text_contents.c_str(), text_contents.size());
 
     form_request("/static1" + std::string(name));

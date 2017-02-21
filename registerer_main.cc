@@ -6,7 +6,6 @@
 
 int main(int arc, char** argv) {
 
-
   NginxConfig config;
   std::string str;
   Request request;

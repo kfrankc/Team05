@@ -124,9 +124,6 @@ TEST(ResponseTest, plain) {
 }
 
 
-
-
-
 TEST(ToStringTest, generaltest) {
     Response r = Response::plain_text_response(
         default_responses::to_string(Response::ResponseCode::ok));

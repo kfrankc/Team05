@@ -79,11 +79,8 @@ void session::do_write(const Response& res) {
     printf("%s\n", request.as_string.c_str());
     printf("==========\n\n");
 
-    // Send the response back to the client and then we're done
-    // boost::asio::async_write(socket, res.to_buffers(),
+    // Send the response back to the client and then we're done   
     std::string res_string = res.ToString();
-    std::vector<boost::asio::const_buffer> testb;
-    testb.push_back(boost::asio::buffer(res_string, res_string.size()));
     boost::asio::async_write(socket, boost::asio::buffer(res_string, res_string.size()),
         [this, self](boost::system::error_code ec, std::size_t len) {
             printf("Amount of data written:%zu\n\n", len);
