@@ -22,14 +22,14 @@ int main(int argc, char* argv[]) {
         NginxServerConfigParser server_parser(argv[1]);
 
         // Get the server settings from the config file (i.e. port)
-        server_config server_settings;
+        ServerSettings server_settings;
         int port = server_parser.ParseServerSettings(server_settings);
         if (port == -1) {
             std::cerr << "Missing port <number> in config file" << std::endl;
             return 1;
         }
 
-        // Parse the echo and static file request handlers from the config file
+        // Parse the request handlers from the config file
         std::vector<std::unique_ptr<http::handler> > handlers;
         server_parser.ParseRequestHandlers(handlers);
         printf("%lu handlers parsed\n", (unsigned long int)(handlers.size()));

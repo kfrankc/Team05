@@ -6,8 +6,7 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-#include "http_handler_echo.h"
-#include "http_handler_file.h"
+#include "request.h"
 #include "server.h"
 
 using boost::asio::ip::tcp;
@@ -38,27 +37,27 @@ void session::do_read() {
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : parse the data from the client
-                http::request_parser::result rslt;
-                std::tie(rslt, std::ignore) = parser.parse(
-                    request, buf.data(), buf.data() + len);
+                Request request;
+                Request::Result result;
+                std::tie(result, std::ignore) = request.Parse(buf.data(),
+                    buf.data() + len);
                 if (rslt == http::request_parser::good) {
-                    
-                    std::string base_url = request.path.substr(0, request.path.find("/", 1)); 
+                    // Get the path prefix
+                    std::string path = request.path();
+                    std::string path_prefix = path.substr(0,
+                        request.path.find("/", 1)); 
 
-                    // Look for correct handler with matching base urls
-                    for (size_t i = 0; i < handlers.size(); i++) {
-                        if (base_url == handlers[i]->base_url) {
-                            do_write(handlers[i]->handle_request(request));
-                            return;
-                        }
+                    // Handle the request or return response code 500 if not OK
+                    Response response;
+                    RequestHandler::Status status =
+                        RequestHandler::HandleRequest(request, &response);
+                    if (status == RequestHandler::OK) {
+                        do_write(response);
+                    } else {
+                        do_write(Response::DefaultResponse(Response::internal_server_error));
                     }
-
-                    // If can't find match, return response not found
-                    do_write(Response::default_response(Response::not_found));
-
-                } else if (rslt == http::request_parser::bad) {
-                    do_write(Response::default_response(
-                        Response::bad_request));
+                } else if (result == Request::bad) {
+                    do_write(Response::DefaultResponse(Response::bad_request));
                 } else {
                     do_read();
                 }
@@ -79,15 +78,15 @@ void session::do_write(const Response& res) {
     printf("%s\n", request.as_string.c_str());
     printf("==========\n\n");
 
-    // Send the response back to the client and then we're done   
-    std::string res_string = res.ToString();
-    boost::asio::async_write(socket, boost::asio::buffer(res_string, res_string.size()),
+    // Send the response back to the client and then we're done
+    std::string res_str = res.ToString();
+    boost::asio::async_write(socket, boost::asio::buffer(res_str, res_str.size()),
         [this, self](boost::system::error_code ec, std::size_t len) {
-            printf("Amount of data written:%zu\n\n", len);
             if (ec) {
                 printf("Failed to send data to %s\n\n",
                     socket.remote_endpoint().address().to_string().c_str());
             }
+            printf("Amount of data written: %zu\n\n", len);
         });
 }
 
