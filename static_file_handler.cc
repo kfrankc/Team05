@@ -5,10 +5,10 @@
 // uri_prefix is the value in the config file that this handler will run for
 // config is the contents of the child block for this handler ONLY
 RequestHandler::Status StaticFileHandler::Init(const std::string& uri_prefix, 
-const NginxConfig& config) :
-request_uri_prefix(uri_prefix),
-request_config(config) {
+const NginxConfig& config) {
     // TODO
+    SetUriPrefix(uri_prefix);
+    SetConfig(config);
     return RequestHandler::OK;
 }
 

@@ -6,11 +6,11 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-#include "http_request.h"
-#include "http_request_parser.h"
+#include "request.h"
+#include "request_handler.h"
 #include "response.h"
-#include "http_handler_echo.h"
-#include "http_handler_file.h"
+#include "echo_handler.h"
+#include "static_file_handler.h"
 
 using boost::asio::ip::tcp;
 
@@ -21,7 +21,7 @@ public:
 
     // Constructor taking a list of HTTP request handlers
     session(tcp::socket sock,
-        const std::vector<std::unique_ptr<http::handler> >& hndlers);
+        const std::vector<std::unique_ptr<RequestHandler> >& hndlers);
 
     // Starts the session between client and server
     void start();
@@ -38,11 +38,11 @@ private:
     void do_write(const Response& res);
 
     // Reference to the vector of request handlers
-    const std::vector<std::unique_ptr<http::handler> >& handlers;
+    const std::vector<std::unique_ptr<RequestHandler> >& handlers;
 
     std::array<char, max_length> buf; // Buffer used when reading client data
-    http::request_parser parser;      // Parser for incoming client requests
-    http::request        request;     // Structure for storing client requests
+    // http::request_parser parser;      // Parser for incoming client requests
+    Request        request;     // Structure for storing client requests
     tcp::socket          socket;      // Used to represent a client
 };
 
@@ -53,7 +53,7 @@ public:
 
     // Constructor taking a list of HTTP request handlers
     server(boost::asio::io_service& io_service, int port,
-        const std::vector<std::unique_ptr<http::handler> >& hndlers);
+        const std::vector<std::unique_ptr<RequestHandler> >& hndlers);
 
 private:
 
@@ -61,7 +61,7 @@ private:
     void do_accept();
 
     // Vector of request handlers - used across multiple sessions/threads
-    const std::vector<std::unique_ptr<http::handler> >& handlers;
+    const std::vector<std::unique_ptr<RequestHandler> >& handlers;
 
     tcp::acceptor acceptor; // Used in boost.asio to take in new clients
     tcp::socket   socket;   // Used in boost.asio to represent clients

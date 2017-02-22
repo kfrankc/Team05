@@ -287,7 +287,7 @@ std::string Response::ToString() const {
     std::string response_string = "";
     response_string += StatusString::ToString(status);
     for (std::size_t i = 0; i < headers.size(); ++i) {
-        const Response::Headers& h = headers[i];
+        const Response::Header& h = headers[i];
         response_string += h.first;
         response_string += std::string(MiscString::field_separator, sizeof(MiscString::field_separator));
         response_string += h.second;

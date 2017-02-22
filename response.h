@@ -15,8 +15,14 @@
 //
 // Constructed by the RequestHandler, after which the server should call
 // ToString to serialize the request
+
+
+
+
 class Response {
 public:
+
+    typedef std::pair<std::string, std::string> Header;
 
     // HTTP response codes
     enum ResponseCode {
