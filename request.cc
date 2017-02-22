@@ -127,6 +127,7 @@ Request::Result Request::Consume(char input) {
     switch (state) {
     case _method_start:
         if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
+            printf("bad1");
             return bad;
         } else {
             state = _method;
@@ -138,6 +139,7 @@ Request::Result Request::Consume(char input) {
             state = _uri;
             return indeterminate;
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
+            printf("bad2");
             return bad;
         } else {
             method_.push_back(input);
@@ -148,6 +150,7 @@ Request::Result Request::Consume(char input) {
             state = _http_version_h;
             return indeterminate;
         } else if (is_ctl(input)) {
+            printf("bad3");
             return bad;
         } else {
             uri_.push_back(input);
@@ -159,6 +162,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back('H');
             return indeterminate;
         } else {
+            printf("bad4");
             return bad;
         }
     case _http_version_t_1:
@@ -167,6 +171,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back('T');
             return indeterminate;
         } else {
+            printf("bad5");
             return bad;
         }
     case _http_version_t_2:
@@ -175,6 +180,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back('T');
             return indeterminate;
         } else {
+            printf("bad6");
             return bad;
         }
     case _http_version_p:
@@ -183,6 +189,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back('P');
             return indeterminate;
         } else {
+            printf("bad7");
             return bad;
         }
     case _http_version_slash:
@@ -191,6 +198,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back('/');
             return indeterminate;
         } else {
+            printf("bad8");
             return bad;
         }
     case _http_version_major_start:
@@ -199,6 +207,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
+            printf("bad9");
             return bad;
         }
     case _http_version_major:
@@ -210,6 +219,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
+            printf("bad10");
             return bad;
         }
     case _http_version_minor_start:
@@ -218,6 +228,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
+            printf("bad11");
             return bad;
         }
     case _http_version_minor:
@@ -228,6 +239,7 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
+            printf("bad12");
             return bad;
         }
     case _expecting_newline_1:
@@ -235,6 +247,7 @@ Request::Result Request::Consume(char input) {
             state = _header_line_start;
             return indeterminate;
         } else {
+            printf("bad13");
             return bad;
         }
     case _header_line_start:
@@ -245,6 +258,7 @@ Request::Result Request::Consume(char input) {
             state = _header_lws;
             return indeterminate;
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
+            printf("bad14");
             return bad;
         } else {
             headers_.push_back(std::pair<std::string, std::string>());
@@ -259,6 +273,7 @@ Request::Result Request::Consume(char input) {
         } else if (input == ' ' || input == '\t') {
             return indeterminate;
         } else if (is_ctl(input)) {
+            printf("bad15");
             return bad;
         } else {
             state = _header_value;
@@ -270,6 +285,7 @@ Request::Result Request::Consume(char input) {
             state = _space_before_header_value;
             return indeterminate;
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
+            printf("bad16");
             return bad;
         } else {
             headers_.back().first.push_back(input);
@@ -280,6 +296,7 @@ Request::Result Request::Consume(char input) {
             state = _header_value;
             return indeterminate;
         } else {
+            printf("bad17");
             return bad;
         }
     case _header_value:
@@ -287,6 +304,7 @@ Request::Result Request::Consume(char input) {
             state = _expecting_newline_2;
             return indeterminate;
         } else if (is_ctl(input)) {
+            printf("bad18");
             return bad;
         } else {
             headers_.back().second.push_back(input);
@@ -297,24 +315,21 @@ Request::Result Request::Consume(char input) {
             state = _header_line_start;
             return indeterminate;
         } else {
+            printf("bad19");
             return bad;
         }
-    case _expecting_newline_3:
-        if (input == '\n') {
-            try {
-                remaining = std::stoull(FindHeaderValue("Content-Length"));
-                if (remaining > 0) {
-                    state = _body;
-                    return indeterminate;
-                } else {
-                    return good;
-                }
-            } catch (...) {
-                return bad;
-            }
+    case _expecting_newline_3: {
+        std::string decoded_path;
+        if (input == '\n' && path(decoded_path) &&
+            !(decoded_path.empty() || decoded_path[0] != '/' ||
+            decoded_path.find("..") != std::string::npos)) {
+            // If path ends in slash (i.e. is a directory) then add "index.html"
+            if (decoded_path[decoded_path.size() - 1] == '/') decoded_path += "index.html";
+
+            return good;
         } else {
             return bad;
-        }
+        } }
     case _body:
         if (remaining > 0) {
             body_.push_back(input);
@@ -323,6 +338,7 @@ Request::Result Request::Consume(char input) {
             return good;
         }
     default:
+        printf("bad22");
         return bad;
     }
 }
