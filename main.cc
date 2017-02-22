@@ -5,6 +5,7 @@
 #include <boost/asio.hpp>
 #include "server.h"
 #include "server_config_parser.h"
+#include "request_handler.h"
 
 using boost::asio::ip::tcp;
 
@@ -30,7 +31,7 @@ int main(int argc, char* argv[]) {
         }
 
         // Parse the request handlers from the config file
-        std::vector<std::unique_ptr<http::handler> > handlers;
+        std::map<std::string, std::unique_ptr<RequestHandler> > handlers;
         server_parser.ParseRequestHandlers(handlers);
         printf("%lu handlers parsed\n", (unsigned long int)(handlers.size()));
 

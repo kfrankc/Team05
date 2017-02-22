@@ -1,6 +1,5 @@
 #include "server_config_parser.h"
-#include "http_handler_echo.h"
-#include "http_handler_file.h"
+#include "request_handler.h"
 
 
 // Constructor: pass in a config file to be parsed for its contents
@@ -10,33 +9,21 @@ NginxServerConfigParser::NginxServerConfigParser(const char* config_file) {
 }
 
 
-// Parses all server echo/static file request handlers and stores the parsed
+// Parses all server request handlers and stores the parsed
 // handlers in a vector out-param. Returns number of request handlers found
 int NginxServerConfigParser::ParseRequestHandlers(
-std::vector<std::unique_ptr<http::handler> >& handlers_out) {
-    // Echo and static handler statement size constants
-    const int ECHO_STATEMENT_SIZE = 2;
-    const int STATIC_STATEMENT_SIZE = 3;
-
-    // Check config file for echo/static file requests to add
+std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out) {
+    // Check config file for request handlers to add
     for (size_t i = 0; i < config.statements.size(); i++) {
-        // Add echo handler with its base URL
-        if (config.statements[i]->tokens[0] == "echo") {
-            // Form should be: echo /base_url
-            if (config.statements[i]->tokens.size() == ECHO_STATEMENT_SIZE && 
-                config.statements[i]->tokens[1][0] == '/') {
-                handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
-                    new http::handler_echo(config.statements[i]->tokens[1]))));
-            }
-        // Add static file with its root directory and base URL
-        } else if (config.statements[i]->tokens[0] == "static") {
-            // Form should be: static /base_url root_directory/
-            if (config.statements[i]->tokens.size() == STATIC_STATEMENT_SIZE &&
-                config.statements[i]->tokens[1][0] == '/') {
-                handlers_out.push_back(std::move(std::unique_ptr<http::handler>(
-                    new http::handler_file(config.statements[i]->tokens[2],
-                                           config.statements[i]->tokens[1]))));
-            }
+        // TODO: Add validation to config file syntax
+        if (config.statements[i]->tokens[0] == "path") {
+            auto handler = RequestHandler::CreateByName(
+                              config.statements[i]->tokens[2].c_str());
+            handler->Init(config.statements[i]->tokens[1],
+                         *(config.statements[i]->child_block));
+            handlers_out.insert(std::pair<std::string, std::unique_ptr<RequestHandler> >(
+                          config.statements[i]->tokens[1],
+                          std::move(std::unique_ptr<RequestHandler>(handler))));
         }
     }
 
@@ -47,7 +34,7 @@ std::vector<std::unique_ptr<http::handler> >& handlers_out) {
 // Parses all server settings and stores the parsed server setup in 
 // server_config out-parm. Returns port number (-1 if no number is found)
 int NginxServerConfigParser::ParseServerSettings(
-server_config& server_settings_out) {
+ServerSettings& server_settings_out) {
     server_settings_out.port = -1;
 
     for (size_t i = 0; i < config.statements.size(); i++) {

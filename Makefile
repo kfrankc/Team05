@@ -27,7 +27,7 @@ TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
 # Source files
 SRC=main.cc server.cc config_parser.cc response.cc \
 server_config_parser.cc request.cc echo_handler.cc \
-static_file_handler.cc 
+static_file_handler.cc request_handler.cc 
 
 .PHONY: clean clean_target gcov test test_gcov test_setup
 

@@ -15,7 +15,7 @@ using boost::asio::ip::tcp;
 
 // Constructor taking a list of HTTP request handlers
 session::session(tcp::socket sock,
-const std::vector<std::unique_ptr<RequestHandler> >& hndlers) :
+const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers) :
 handlers(hndlers), socket(std::move(sock)) {
 
 }
@@ -54,8 +54,14 @@ void session::do_read() {
 
                     // Handle the request or return response code 500 if not OK
                     Response response;
-                    RequestHandler::Status status =
-                        RequestHandler::HandleRequest(request, &response);
+                    std::map<std::string, std::unique_ptr<RequestHandler> >::const_iterator it;
+                    it = handlers.find(path_prefix);
+                    RequestHandler::Status status;
+                    if (it != handlers.end()) {
+                        status = it->second->HandleRequest(request, &response);
+                    } else {
+                        // TODO: Error handle
+                    }
                     if (status == RequestHandler::OK) {
                         do_write(response);
                     } else {
@@ -98,7 +104,7 @@ void session::do_write(const Response& res) {
 
 // Constructor taking a list of HTTP request handlers
 server::server(boost::asio::io_service& io_service, int port,
-const std::vector<std::unique_ptr<RequestHandler> >& hndlers) :
+const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers) :
 handlers(hndlers), acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
 socket(io_service) {
     // Start accepting clients as soon as the server instance is created
