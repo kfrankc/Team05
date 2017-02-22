@@ -7,13 +7,13 @@
 
 port 2020;  # This is also a comment
 
-path / StaticHandler {
-  root /foo/bar;
+path / StaticFileHandler {
+  root ./;
 }
 
 path /echo EchoHandler {}
 
-path /status StatusHandler {}
+# path /status StatusHandler {}
 
 # Default response handler if no handlers match
 default NotFoundHandler {}
