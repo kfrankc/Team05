@@ -35,6 +35,16 @@ public:
     virtual Status HandleRequest(const Request& request,
                                  Response* response) = 0;
 
+
+    void SetUriPrefix(const std::string& prefix);
+    void SetConfig(const NginxConfig& config);
+
+    std::string GetUriPrefix() const;
+    NginxConfig GetConfig() const;
+
+
+
+
 private:
     std::string request_uri_prefix; // Request URI prefix of handler
     NginxConfig request_config;     // Request config child block of handler

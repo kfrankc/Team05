@@ -3,15 +3,15 @@
 
 
 // Default constructor
-Request::Request() : state(method_start) {
+Request::Request() : state(_method_start) {
 }
 
 
 // Returns the value for the given header or the empty string
 std::string Request::FindHeaderValue(const std::string& name) const {
-    for (i = 0; i < headers.size(); i++) {
-        if (headers[i].first == name) {
-            return headers[i].second;
+    for (std::size_t i = 0; i < headers_.size(); i++) {
+        if (headers_[i].first == name) {
+            return headers_[i].second;
         }
     }
     return std::string();
@@ -20,31 +20,31 @@ std::string Request::FindHeaderValue(const std::string& name) const {
 
 // Gets the unparsed string that represents the request
 std::string Request::raw_request() const {
-    return raw_request;
+    return raw_request_;
 }
 
 
 // Gets the method for the request (indicates what is to be performed)
 std::string Request::method() const {
-    return method;
+    return method_;
 }
 
 
 // Gets the resource identifier for the request
 std::string Request::uri() const {
-    return uri;
+    return uri_;
 }
 
 
 // Returns true if out contains the URI converted to a file system path
 bool Request::path(std::string& out) const {
     out.clear();
-    out.reserve(uri.size());
-    for (std::size_t i = 0; i < uri.size(); ++i) {
-        if (uri[i] == '%') {
-            if (i + 3 <= uri.size()) {
+    out.reserve(uri_.size());
+    for (std::size_t i = 0; i < uri_.size(); ++i) {
+        if (uri_[i] == '%') {
+            if (i + 3 <= uri_.size()) {
                 int value = 0;
-                std::istringstream is(uri.substr(i + 1, 2));
+                std::istringstream is(uri_.substr(i + 1, 2));
                 if (is >> std::hex >> value) {
                     out += static_cast<char>(value);
                     i += 2;
@@ -54,15 +54,15 @@ bool Request::path(std::string& out) const {
             } else {
                 return false;
             }
-        } else if (uri[i] == '+') {
+        } else if (uri_[i] == '+') {
             out += ' ';
         } else {
-            out += uri[i];
+            out += uri_[i];
         }
     }
 
     // Ensure that the path does not go backwards in the directory structure
-    if (path.find("..") != std::string::npos) return false;
+    if (out.find("..") != std::string::npos) return false;
 
     // If path ends in slash (i.e. is a directory) then add "index.html"
     if (out[out.size() - 1] == '/') out += "index.html";
@@ -73,19 +73,20 @@ bool Request::path(std::string& out) const {
 
 // Gets the HTTP version the request was made with
 std::string Request::version() const {
-    return version;
+    return version_;
 }
 
 
 // Gets the headers of the request
+using Headers = std::vector<std::pair<std::string, std::string> >;
 Headers Request::headers() const {
-    return headers;
+    return headers_;
 }
 
 
 // Gets the body of the request
 std::string Request::body() const {
-    return body;
+    return body_;
 }
 
 
@@ -122,14 +123,14 @@ static bool is_digit(int c) {
 
 
 Request::Result Request::Consume(char input) {
-    raw += input;
+    raw_request_ += input;
     switch (state) {
     case _method_start:
         if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
             return bad;
         } else {
             state = _method;
-            method.push_back(input);
+            method_.push_back(input);
             return indeterminate;
         }
     case _method:
@@ -139,7 +140,7 @@ Request::Result Request::Consume(char input) {
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
             return bad;
         } else {
-            method.push_back(input);
+            method_.push_back(input);
             return indeterminate;
         }
     case _uri:
@@ -149,13 +150,13 @@ Request::Result Request::Consume(char input) {
         } else if (is_ctl(input)) {
             return bad;
         } else {
-            uri.push_back(input);
+            uri_.push_back(input);
             return indeterminate;
         }
     case _http_version_h:
         if (input == 'H') {
             state = _http_version_t_1;
-            version.push_back('H');
+            version_.push_back('H');
             return indeterminate;
         } else {
             return bad;
@@ -163,7 +164,7 @@ Request::Result Request::Consume(char input) {
     case _http_version_t_1:
         if (input == 'T') {
             state = _http_version_t_2;
-            version.push_back('T');
+            version_.push_back('T');
             return indeterminate;
         } else {
             return bad;
@@ -171,7 +172,7 @@ Request::Result Request::Consume(char input) {
     case _http_version_t_2:
         if (input == 'T') {
             state = _http_version_p;
-            version.push_back('T');
+            version_.push_back('T');
             return indeterminate;
         } else {
             return bad;
@@ -179,7 +180,7 @@ Request::Result Request::Consume(char input) {
     case _http_version_p:
         if (input == 'P') {
             state = _http_version_slash;
-            version.push_back('P');
+            version_.push_back('P');
             return indeterminate;
         } else {
             return bad;
@@ -187,7 +188,7 @@ Request::Result Request::Consume(char input) {
     case _http_version_slash:
         if (input == '/') {
             state = _http_version_major_start;
-            version.push_back('/');
+            version_.push_back('/');
             return indeterminate;
         } else {
             return bad;
@@ -195,7 +196,7 @@ Request::Result Request::Consume(char input) {
     case _http_version_major_start:
         if (is_digit(input)) {
             state = _http_version_major;
-            version.push_back(input);
+            version_.push_back(input);
             return indeterminate;
         } else {
             return bad;
@@ -203,10 +204,10 @@ Request::Result Request::Consume(char input) {
     case _http_version_major:
         if (input == '.') {
             state = _http_version_minor_start;
-            version.push_back('.');
+            version_.push_back('.');
             return indeterminate;
         } else if (is_digit(input)) {
-            version.push_back(input);
+            version_.push_back(input);
             return indeterminate;
         } else {
             return bad;
@@ -214,7 +215,7 @@ Request::Result Request::Consume(char input) {
     case _http_version_minor_start:
         if (is_digit(input)) {
             state = _http_version_minor;
-            version.push_back(input);
+            version_.push_back(input);
             return indeterminate;
         } else {
             return bad;
@@ -224,7 +225,7 @@ Request::Result Request::Consume(char input) {
             state = _expecting_newline_1;
             return indeterminate;
         } else if (is_digit(input)) {
-            version.push_back(input);
+            version_.push_back(input);
             return indeterminate;
         } else {
             return bad;
@@ -240,14 +241,14 @@ Request::Result Request::Consume(char input) {
         if (input == '\r') {
             state = _expecting_newline_3;
             return indeterminate;
-        } else if (!headers.empty() && (input == ' ' || input == '\t')) {
+        } else if (!headers_.empty() && (input == ' ' || input == '\t')) {
             state = _header_lws;
             return indeterminate;
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
             return bad;
         } else {
-            headers.push_back(std::pair<std::string, std::string>());
-            headers.back().first.push_back(input);
+            headers_.push_back(std::pair<std::string, std::string>());
+            headers_.back().first.push_back(input);
             state = _header_name;
             return indeterminate;
         }
@@ -261,7 +262,7 @@ Request::Result Request::Consume(char input) {
             return bad;
         } else {
             state = _header_value;
-            headers.back().second.push_back(input);
+            headers_.back().second.push_back(input);
             return indeterminate;
         }
     case _header_name:
@@ -271,7 +272,7 @@ Request::Result Request::Consume(char input) {
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
             return bad;
         } else {
-            headers.back().first.push_back(input);
+            headers_.back().first.push_back(input);
             return indeterminate;
         }
     case _space_before_header_value:
@@ -288,7 +289,7 @@ Request::Result Request::Consume(char input) {
         } else if (is_ctl(input)) {
             return bad;
         } else {
-            headers.back().second.push_back(input);
+            headers_.back().second.push_back(input);
             return indeterminate;
         }
     case _expecting_newline_2:
@@ -316,7 +317,7 @@ Request::Result Request::Consume(char input) {
         }
     case _body:
         if (remaining > 0) {
-            body.push_back(input);
+            body_.push_back(input);
             remaining--;
         } else {
             return good;

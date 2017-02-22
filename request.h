@@ -2,6 +2,9 @@
 #define REQUEST_H
 
 #include <utility>
+#include <string>
+#include <vector>
+#include <tuple>
 
 
 // Represents an HTTP Request
@@ -95,12 +98,12 @@ private:
 
     unsigned long long remaining; // Used to track remaining characters to parse
 
-    std::string raw;     // The entire, unparsed request as a string
-    std::string method;  // Indicates what is to be performed
-    std::string uri;     // Identifies the resource for the request
-    std::string version; // HTTP version the requester is using
-    Headers     headers; // Headers included in the request
-    std::string body;    // Body of the request
+    std::string raw_request_;     // The entire, unparsed request as a string
+    std::string method_;  // Indicates what is to be performed
+    std::string uri_;     // Identifies the resource for the request
+    std::string version_; // HTTP version the requester is using
+    Headers     headers_; // Headers included in the request
+    std::string body_;    // Body of the request
 };
 
 

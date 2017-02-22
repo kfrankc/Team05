@@ -13,3 +13,17 @@ RequestHandler* RequestHandler::CreateByName(const char* type) {
     return (*type_and_builder->second)();
 }
 
+void RequestHandler::SetUriPrefix(const std::string& prefix) {
+    request_uri_prefix = prefix;
+}
+void RequestHandler::SetConfig(const NginxConfig& config) {
+    request_config = config;
+}
+
+    
+std::string RequestHandler::GetUriPrefix() const {
+    return request_uri_prefix;
+}
+NginxConfig RequestHandler::GetConfig() const {
+    return request_config;
+}
