@@ -25,7 +25,7 @@ std::map<std::string, std::string>& handler_info_out) {
                 if (config.statements[i]->tokens.size() > 2) {
                     auto handler = RequestHandler::CreateByName(
                         config.statements[i]->tokens[2].c_str());
-                    if (handler) {
+                    if (handler && config.statements[i]->child_block) {
                         if (handler->Init(config.statements[i]->tokens[1],
                             *(config.statements[i]->child_block)) ==
                             RequestHandler::OK) {
@@ -49,7 +49,7 @@ std::map<std::string, std::string>& handler_info_out) {
                 if (config.statements[i]->tokens.size() > 1) {
                     auto handler = RequestHandler::CreateByName(
                         config.statements[i]->tokens[1].c_str());
-                    if (handler) {
+                    if (handler && config.statements[i]->child_block) {
                         if (handler->Init("",
                             *(config.statements[i]->child_block)) ==
                             RequestHandler::OK) {

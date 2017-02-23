@@ -108,7 +108,7 @@ TEST_F(HandlerParseTest, SomeHandlersConfig) {
 
 
 TEST_F(HandlerParseTest, ImproperHandlerConfig) {
-    EXPECT_EQ(GetNumberOfHandlersParsed("path /;path StaticFileHandler"), 1);
+    EXPECT_EQ(GetNumberOfHandlersParsed("path /echo StaticFileHandler"), 1);
     EXPECT_TRUE(handlers.find("") != handlers.end());
     EXPECT_EQ(handler_info["(default)"], "NotFoundHandler");
 }
