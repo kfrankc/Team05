@@ -6,22 +6,22 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-#include "http_request.h"
-#include "http_request_parser.h"
+#include "request.h"
+#include "request_handler.h"
 #include "response.h"
-#include "http_handler_echo.h"
-#include "http_handler_file.h"
+#include "echo_handler.h"
+#include "static_file_handler.h"
 
 using boost::asio::ip::tcp;
 
 
 // Represents a session between the server and a client
-class session : public std::enable_shared_from_this<session> {
+class Session : public std::enable_shared_from_this<Session> {
 public:
 
     // Constructor taking a list of HTTP request handlers
-    session(tcp::socket sock,
-        const std::vector<std::unique_ptr<http::handler> >& hndlers);
+    Session(tcp::socket sock,
+    const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers);
 
     // Starts the session between client and server
     void start();
@@ -35,36 +35,75 @@ private:
     void do_read();
 
     // Callback for when a client should be written to
-    void do_write(const Response& res);
+    void do_write(const std::string& uri, const Response& res);
 
     // Reference to the vector of request handlers
-    const std::vector<std::unique_ptr<http::handler> >& handlers;
+    const std::map<std::string, std::unique_ptr<RequestHandler> >& handlers;
 
     std::array<char, max_length> buf; // Buffer used when reading client data
-    http::request_parser parser;      // Parser for incoming client requests
-    http::request        request;     // Structure for storing client requests
-    tcp::socket          socket;      // Used to represent a client
+    Request     request;              // Structure for storing client requests
+    tcp::socket socket;               // Used to represent a client
 };
 
 
 // Represents the server
-class server  {
+class Server  {
 public:
 
-    // Constructor taking a list of HTTP request handlers
-    server(boost::asio::io_service& io_service, int port,
-        const std::vector<std::unique_ptr<http::handler> >& hndlers);
+    // Returns the instance of the server using the singleton pattern
+    static std::unique_ptr<Server>& GetInstance() {
+        static std::unique_ptr<Server> instance;
+        return instance;
+    }
+
+    // Begins running the server with the given port and handlers
+    static void Run(int port,
+    const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers,
+    const std::map<std::string, std::string>& hndler_info) {
+        boost::asio::io_service io_service;
+        std::unique_ptr<Server>& server = GetInstance();
+        server.reset(new Server(io_service, port, std::move(hndlers),
+            std::move(hndler_info)));
+        io_service.run();
+    }
+
+    // Gets a map of URLs to strings representing what handler they're using
+    const std::map<std::string, std::string>& GetHandlersByUrl() const {
+        return handlerInfo;
+    }
+
+    // Gets a vector of all the requests received so far
+    //  Note: the data contained in the pair is URI and response code
+    const std::vector<std::pair<std::string, int> >& GetRequestHistory() const {
+        return requests;
+    }
+
+protected:
+
+    // Session is a friend class so it can edit the below var
+    friend class Session;
+
+    // Vector containing all the previous requests to the server
+    std::vector<std::pair<std::string, int> > requests;
+
+    // Map of URL prefixes to their handlers (updated by ServerConfigParser)
+    const std::map<std::string, std::string>& handlerInfo;
 
 private:
+
+    // Constructor taking a list of HTTP request handlers
+    Server(boost::asio::io_service& io_service, int port,
+    const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers,
+    const std::map<std::string, std::string>& hndler_info);
 
     // Callback for when a client attempts to connect
     void do_accept();
 
     // Vector of request handlers - used across multiple sessions/threads
-    const std::vector<std::unique_ptr<http::handler> >& handlers;
+    const std::map<std::string, std::unique_ptr<RequestHandler> >& handlers;
 
-    tcp::acceptor acceptor; // Used in boost.asio to take in new clients
-    tcp::socket   socket;   // Used in boost.asio to represent clients
+    tcp::acceptor acceptor;    // Used in boost.asio to take in new clients
+    tcp::socket   socket;      // Used in boost.asio to represent clients
 };
 
 #endif // SERVER_H

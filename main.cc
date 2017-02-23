@@ -5,6 +5,7 @@
 #include <boost/asio.hpp>
 #include "server.h"
 #include "server_config_parser.h"
+#include "request_handler.h"
 
 using boost::asio::ip::tcp;
 
@@ -22,23 +23,22 @@ int main(int argc, char* argv[]) {
         NginxServerConfigParser server_parser(argv[1]);
 
         // Get the server settings from the config file (i.e. port)
-        server_config server_settings;
+        ServerSettings server_settings;
         int port = server_parser.ParseServerSettings(server_settings);
         if (port == -1) {
             std::cerr << "Missing port <number> in config file" << std::endl;
             return 1;
         }
 
-        // Parse the echo and static file request handlers from the config file
-        std::vector<std::unique_ptr<http::handler> > handlers;
-        server_parser.ParseRequestHandlers(handlers);
+        // Parse the request handlers from the config file
+        std::map<std::string, std::unique_ptr<RequestHandler> > handlers;
+        std::map<std::string, std::string> handler_info;
+        server_parser.ParseRequestHandlers(handlers, handler_info);
         printf("%lu handlers parsed\n", (unsigned long int)(handlers.size()));
 
         // Start the server
-        boost::asio::io_service io_service;
-        server s(io_service, port, std::move(handlers));
-        printf("Running server on port %d...\n", port);
-        io_service.run();
+        printf("Running server on port %d...\n\n", port);
+        Server::Run(port, std::move(handlers), std::move(handler_info));
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }

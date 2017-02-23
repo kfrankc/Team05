@@ -2,12 +2,11 @@
 #define SERVER_CONFIG_PARSER_H
 
 #include "config_parser.h"
-#include "http_handler_echo.h"
-#include "http_handler_file.h"
+#include "request_handler.h"
 
-struct server_config {
+struct ServerSettings {
     int port;
-    // TODO: Add in more server specific configurations here
+    // Add in more server specific configurations here
 };
 
 // The driver that parses a config file for port and request handlers
@@ -17,16 +16,16 @@ public:
     // Constructor: pass in a config file to be parsed for its contents
     NginxServerConfigParser(const char* config_file);
 
-    // Parses all server echo/static file request handlers and stores
-    // the parsed handlers in vector out-param. Returns number of request 
-    // handlers found
+    // Parses all server request handlers and stores the parsed handlers in 
+    // map out-param. Returns number of request handlers found
     int ParseRequestHandlers(
-        std::vector<std::unique_ptr<http::handler> >& handlers_out);
+        std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out,
+        std::map<std::string, std::string>& handler_info_out);
 
     // Parses all server settings and stores the parsed server setup
     // in server_config out-param. Returns port number (-1 if no number is
     // found)
-    int ParseServerSettings(server_config& server_settings_out);
+    int ParseServerSettings(ServerSettings& server_settings_out);
 
 private:
 

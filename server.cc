@@ -6,29 +6,29 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
-#include "http_handler_echo.h"
-#include "http_handler_file.h"
+#include "request.h"
+#include "response.h"
 #include "server.h"
 
 using boost::asio::ip::tcp;
 
 
 // Constructor taking a list of HTTP request handlers
-session::session(tcp::socket sock,
-const std::vector<std::unique_ptr<http::handler> >& hndlers) :
+Session::Session(tcp::socket sock,
+const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers) :
 handlers(hndlers), socket(std::move(sock)) {
 
 }
 
 
 // Starts the session between client and server
-void session::start() {
+void Session::start() {
     do_read();
 }
 
 
 // Callback for when a client should have its data read
-void session::do_read() {
+void Session::do_read() {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 
@@ -38,29 +38,49 @@ void session::do_read() {
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : parse the data from the client
-                http::request_parser::result rslt;
-                std::tie(rslt, std::ignore) = parser.parse(
-                    request, buf.data(), buf.data() + len);
-                if (rslt == http::request_parser::good) {
-                    
-                    std::string base_url = request.path.substr(0, request.path.find("/", 1)); 
+                std::unique_ptr<Request> request = Request::Parse(std::string(
+                    std::begin(buf), std::end(buf)));
+                if (request) {
+                    // Get the path for determining what handler were using
+                    std::string path = request->path();
+                    if (path.empty()) {
+                        do_write("(bad request)", Response::DefaultResponse(
+                            Response::bad_request));
+                        return;
+                    }
 
-                    // Look for correct handler with matching base urls
-                    for (size_t i = 0; i < handlers.size(); i++) {
-                        if (base_url == handlers[i]->base_url) {
-                            do_write(handlers[i]->handle_request(request));
-                            return;
+                    // Get the correct request handler per all possible prefixes
+                    //  Note: This will loop until it reaches the empty string,
+                    //  and we are guarenteed the empty string is in the map
+                    std::string path_prefix = path;
+                    std::map<std::string, std::unique_ptr<RequestHandler>
+                        >::const_iterator it = handlers.find(path_prefix);
+                    while (it == handlers.end()) {
+                        // For every slash, we check if a handler exists both
+                        // with the slash and without it before moving on to
+                        // the next least-nested prefix
+                        std::size_t slash_pos = path_prefix.find_last_of("/");
+                        path_prefix = path_prefix.substr(0, slash_pos + 1);
+                        it = handlers.find(path_prefix);
+                        if (it == handlers.end()) {
+                            path_prefix = path_prefix.substr(0, slash_pos);
+                            it = handlers.find(path_prefix);
                         }
                     }
 
-                    // If can't find match, return response not found
-                    do_write(Response::default_response(Response::not_found));
-
-                } else if (rslt == http::request_parser::bad) {
-                    do_write(Response::default_response(
-                        Response::bad_request));
+                    // Handle the request or return response code 500 if not OK
+                    RequestHandler::Status status;
+                    Response response;
+                    status = it->second->HandleRequest(*request, &response);
+                    if (status == RequestHandler::OK) {
+                        do_write(request->uri(), response);
+                    } else {
+                        do_write(request->uri(), Response::DefaultResponse(
+                            Response::internal_server_error));
+                    }
                 } else {
-                    do_read();
+                    do_write("(bad request)", Response::DefaultResponse(
+                        Response::bad_request));
                 }
             }
         });
@@ -68,42 +88,47 @@ void session::do_read() {
 
 
 // Callback for when a client should be written to
-void session::do_write(const Response& res) {
+void Session::do_write(const std::string& uri, const Response& res) {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 
     // Print out the data we're sending to the client
+    std::string res_str = res.ToString();
     printf("Sending the following to %s\n",
         socket.remote_endpoint().address().to_string().c_str());
     printf("==========\n");
-    printf("%s\n", request.as_string.c_str());
-    printf("==========\n\n");
+    printf("%s\n", res_str.c_str());
+    printf("==========\n");
 
-    // Send the response back to the client and then we're done   
-    std::string res_string = res.ToString();
-    boost::asio::async_write(socket, boost::asio::buffer(res_string, res_string.size()),
+    // Track the responses all responses that are sent out
+    Server::GetInstance()->requests.push_back(
+        std::make_pair(uri, (int)res.GetStatus()));
+
+    // Send the response back to the client and then we're done
+    boost::asio::async_write(socket, boost::asio::buffer(res_str, res_str.size()),
         [this, self](boost::system::error_code ec, std::size_t len) {
-            printf("Amount of data written:%zu\n\n", len);
             if (ec) {
-                printf("Failed to send data to %s\n\n",
+                printf("Failed to send data to %s\n",
                     socket.remote_endpoint().address().to_string().c_str());
             }
+            printf("Amount of data written: %zu bytes\n\n", len);
         });
 }
 
 
 // Constructor taking a list of HTTP request handlers
-server::server(boost::asio::io_service& io_service, int port,
-const std::vector<std::unique_ptr<http::handler> >& hndlers) :
-handlers(hndlers), acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
-socket(io_service) {
+Server::Server(boost::asio::io_service& io_service, int port,
+const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers,
+const std::map<std::string, std::string>& hndler_info) :
+handlerInfo(hndler_info), handlers(hndlers),
+acceptor(io_service, tcp::endpoint(tcp::v4(), port)), socket(io_service) {
     // Start accepting clients as soon as the server instance is created
     do_accept();
 }
 
 
 // Callback for when a client attempts to connect
-void server::do_accept()
+void Server::do_accept()
 {
     // Accept clients continuously in other threads than the main thread
     acceptor.async_accept(socket,
@@ -111,7 +136,7 @@ void server::do_accept()
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : creates a session between the client and server
-                std::make_shared<session>(std::move(socket), handlers)->start();
+                std::make_shared<Session>(std::move(socket), handlers)->start();
             }
 
             // Repeatedly do this

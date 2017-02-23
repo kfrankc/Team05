@@ -43,7 +43,6 @@ TEST_F(NginxConfigParserStringTest, SimpleStatementConfig) {
 TEST_F(NginxConfigParserStringTest, SimpleInvalidStatementsConfig) {
     EXPECT_FALSE(ParseString("foo bar")) << "Config missing semicolon.";
     EXPECT_FALSE(ParseString("foo bar;;")) << "Config with repeated semicolons.";
-    EXPECT_FALSE(ParseString("foo bar {}")) << "Config missing child block statement.";
     EXPECT_FALSE(ParseString("foo 'bar;")) << "Config missing closed single quote.";
     EXPECT_FALSE(ParseString("foo \"bar;")) << "Config missing closed double quote.";
     EXPECT_FALSE(ParseString("foo 'bar\";")) << "Config with improper matching quote.";
@@ -74,6 +73,7 @@ TEST_F(NginxConfigParserStringTest, InnerStatementsConfig) {
 TEST_F(NginxConfigParserStringTest, CurlyConfigs) {
     EXPECT_TRUE(ParseString("foo bar {foo bar; foo bar;}"));
     EXPECT_EQ(1, out_config.statements.size());
+    EXPECT_EQ(2, out_config.statements[0]->child_block->statements.size());
 }
 
 
@@ -91,3 +91,10 @@ TEST_F(NginxConfigParserStringTest, UnbalancedCurlyConfigs) {
     EXPECT_FALSE(ParseString("foo bar foo bar; } } }"));
 }
 
+
+TEST_F(NginxConfigParserStringTest, EmptyChildBlock) {
+    EXPECT_TRUE(ParseString("foo bar {} ")) << "Empty child block is valid.";
+    ASSERT_EQ(1, out_config.statements.size());
+    EXPECT_EQ(0, out_config.statements[0]->child_block->statements.size());
+
+}

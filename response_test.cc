@@ -6,15 +6,15 @@ class ResponseDefaultResponseTest : public ::testing::Test {
 protected:
 
     void VerifyContents(Response::ResponseCode status) {
-        r = Response::default_response(status);
+        r = Response::DefaultResponse(status);
 
         ASSERT_EQ(status, r.GetStatus());
-        ASSERT_EQ(default_responses::to_string(r.GetStatus()), r.GetBody());
+        ASSERT_EQ(DefaultResponse::ToHtml(r.GetStatus()), r.GetBody());
         ASSERT_EQ(2, r.GetHeaders().size());
-        EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
-        EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
-        EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
-        EXPECT_EQ("text/html", r.GetHeaders()[1].value);
+        EXPECT_EQ("Content-Length", r.GetHeaders()[0].first);
+        EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].second);
+        EXPECT_EQ("Content-Type", r.GetHeaders()[1].first);
+        EXPECT_EQ("text/html", r.GetHeaders()[1].second);
     }
 
     Response r;
@@ -97,44 +97,44 @@ TEST_F(ResponseDefaultResponseTest, ServiceUnavailableStatus) {
 
 
 TEST(ResponseTest, html) {
-    Response r = Response::html_response(
-        default_responses::to_string(Response::ResponseCode::ok));
+    Response r = Response::HtmlResponse(
+        DefaultResponse::ToHtml(Response::ResponseCode::ok));
 
     ASSERT_EQ(Response::ResponseCode::ok, r.GetStatus());
-    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.GetBody());
+    ASSERT_EQ(DefaultResponse::ToHtml(Response::ResponseCode::ok), r.GetBody());
     ASSERT_EQ(2, r.GetHeaders().size());
-    EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
-    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
-    EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
-    EXPECT_EQ("text/html", r.GetHeaders()[1].value);
+    EXPECT_EQ("Content-Length", r.GetHeaders()[0].first);
+    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].second);
+    EXPECT_EQ("Content-Type", r.GetHeaders()[1].first);
+    EXPECT_EQ("text/html", r.GetHeaders()[1].second);
 }
 
 
 TEST(ResponseTest, plain) {
-    Response r = Response::plain_text_response(
-        default_responses::to_string(Response::ResponseCode::ok));
+    Response r = Response::PlainTextResponse(
+        DefaultResponse::ToHtml(Response::ResponseCode::ok));
 
     ASSERT_EQ(Response::ResponseCode::ok, r.GetStatus());
-    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.GetBody());
+    ASSERT_EQ(DefaultResponse::ToHtml(Response::ResponseCode::ok), r.GetBody());
     ASSERT_EQ(2, r.GetHeaders().size());
-    EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
-    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
-    EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
-    EXPECT_EQ("text/plain", r.GetHeaders()[1].value);
+    EXPECT_EQ("Content-Length", r.GetHeaders()[0].first);
+    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].second);
+    EXPECT_EQ("Content-Type", r.GetHeaders()[1].first);
+    EXPECT_EQ("text/plain", r.GetHeaders()[1].second);
 }
 
 
 TEST(ToStringTest, generaltest) {
-    Response r = Response::plain_text_response(
-        default_responses::to_string(Response::ResponseCode::ok));
+    Response r = Response::PlainTextResponse(
+        DefaultResponse::ToHtml(Response::ResponseCode::ok));
 
     ASSERT_EQ(Response::ResponseCode::ok, r.GetStatus());
-    ASSERT_EQ(default_responses::to_string(Response::ResponseCode::ok), r.GetBody());
+    ASSERT_EQ(DefaultResponse::ToHtml(Response::ResponseCode::ok), r.GetBody());
     ASSERT_EQ(2, r.GetHeaders().size());
-    EXPECT_EQ("Content-Length", r.GetHeaders()[0].name);
-    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].value);
-    EXPECT_EQ("Content-Type", r.GetHeaders()[1].name);
-    EXPECT_EQ("text/plain", r.GetHeaders()[1].value);
+    EXPECT_EQ("Content-Length", r.GetHeaders()[0].first);
+    EXPECT_EQ(std::to_string(r.GetBody().size()), r.GetHeaders()[0].second);
+    EXPECT_EQ("Content-Type", r.GetHeaders()[1].first);
+    EXPECT_EQ("text/plain", r.GetHeaders()[1].second);
 
 
     EXPECT_EQ("HTTP/1.0 200 OK\r\nContent-Length: 0\r\nContent-Type: text/plain\r\n\r\n", r.ToString());

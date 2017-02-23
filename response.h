@@ -1,4 +1,11 @@
-// Represents an HTTP response.
+#ifndef RESPONSE_H
+#define RESPONSE_H
+
+#include <string>
+#include <vector>
+
+
+// Represents an HTTP response
 //
 // Usage:
 //   Response r;
@@ -6,27 +13,15 @@
 //   r.SetBody(...);
 //   return r.ToString();
 //
-// Constructed by the RequestHandler, after which the server should call ToString
-// to serialize.
-
-
-#ifndef RESPONSE_H
-#define RESPONSE_H
-
-#include <boost/asio.hpp>
-#include <string>
-#include <vector>
-
-#define name first
-#define value second
-
-typedef std::pair<std::string, std::string> header;
-
-
+// Constructed by the RequestHandler, after which the server should call
+// ToString to serialize the request
 class Response {
 public:
+
+    typedef std::pair<std::string, std::string> Header;
+
+    // HTTP response codes
     enum ResponseCode {
-        // Define your HTTP response codes here.
         ok = 200,
         created = 201,
         accepted = 202,
@@ -45,55 +40,50 @@ public:
     };
 
     // Creates a default response for a given status code
-    static Response default_response(ResponseCode status);
+    static Response DefaultResponse(ResponseCode status);
 
     // Creates a plain text response for the given text
-    static Response plain_text_response(std::string&& text);
+    static Response PlainTextResponse(std::string&& text);
 
     // Creates a text/html response for the given html
-    static Response html_response(std::string&& html);   
+    static Response HtmlResponse(std::string&& html);  
 
-    // Sets the status of the repsonse
-    void SetStatus(const ResponseCode response_code);
+    // Get the headers of the response
+    using Headers = std::vector<std::pair<std::string, std::string>>;
+    Headers GetHeaders() const;
 
-    // Adds a header where the first field is the name of the header and the second is the value of the header
-    void AddHeader(const std::string& header_name, const std::string& header_value);
+    // Adds a header to the response
+    void AddHeader(const std::string& name, const std::string& value);
+    
+    // Get the body of the response
+    std::string GetBody() const;
 
     // Sets the body of the response
     void SetBody(const std::string& body);
     
-    // Converts response to a HTTP string
-    std::string ToString() const;
-
-    using Headers = std::vector<std::pair<std::string, std::string>>;
-    // Get the headers of the response
-    Headers GetHeaders() const;
     // Get the status of the response
     ResponseCode GetStatus() const;
-    // Get the body of the response
-    std::string GetBody() const;
 
- private:
+    // Sets the status of the repsonse
+    void SetStatus(const ResponseCode response_code);
+    
+    // Converts response to a string representing data to be sent to the client
+    std::string ToString() const;
+
+private:
+
     ResponseCode status; // Status code of the http response
-    std::vector<std::pair<std::string, std::string>> headers; // Vector of headers for the http response
+    std::vector<std::pair<std::string, std::string> > headers; // Vector of headers for the http response
     std::string content; // Body of http response
-
-
 };
 
 
-
-
-
-namespace default_responses {
+namespace DefaultResponse {
 
 // Gets default message body for a given status code
-std::string to_string(Response::ResponseCode status);
+std::string ToHtml(Response::ResponseCode status);
 
-} // namespace default_responses
-
-
-
-
+} // namespace DefaultResponse
 
 #endif // RESPONSE_H
+
