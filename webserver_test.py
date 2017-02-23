@@ -12,6 +12,14 @@ curl_output_expected_echo = [
 ]
 
 # The expected output from curl's echo request as a regular expression
+curl_output_expected_echo2 = [
+    "GET /echo/ HTTP/1\\.0\r\n",
+    "Host: localhost:\\d+\r\n",
+    "User-Agent: curl/\\d+\\.\\d+\\.\\d+\r\n",
+    "Accept: \\*/\\*\r\n"
+]
+
+# The expected output from curl's echo request as a regular expression
 curl_output_expected_static_image = [
     "HTTP/1\\.0 200 OK\r\n",
     "Content-Length: \\d+\r\n",
@@ -45,7 +53,7 @@ sys.stdout.write("\nServer output for integration test 2\n")
 sys.stdout.write("==========\n")
 sys.stdout.write(curl_output)
 sys.stdout.write("==========\n\n")
-for string in curl_output_expected_echo:
+for string in curl_output_expected_echo2:
     pattern = re.compile(string)
     if not pattern.search(curl_output):
         ec = 1
