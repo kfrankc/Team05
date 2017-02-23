@@ -1,10 +1,9 @@
 #ifndef REQUEST_H
 #define REQUEST_H
 
-#include <utility>
+#include <memory>
 #include <string>
 #include <vector>
-#include <tuple>
 
 
 // Represents an HTTP Request
@@ -21,26 +20,16 @@ public:
         indeterminate
     };
 
+    // Parses data from the client. The return value is valid when a
+    // complete request has been parsed, nullptr if the data is invalid or
+    // indeterminate
+    static std::unique_ptr<Request> Parse(const std::string& raw_request);
+
     // Default constructor
     Request();
 
     // Returns the value for the given header or the empty string
-    std::string FindHeaderValue(const std::string& name) const;
-
-    // Parses data from the client. The enum return value is good when a
-    // complete request has been parsed, bad if the data is invalid, and
-    // indeterminate when more data is required. The InputIterator return value
-    // indicates how much of the input has been consumed
-    template <typename InputIterator>
-    std::tuple<Result, InputIterator> Parse(InputIterator begin,
-    InputIterator end) {
-        while (begin != end) {
-            Result result = Consume(*begin++);
-            if (result == good || result == bad)
-                return std::make_tuple(result, begin);
-        }
-        return std::make_tuple(indeterminate, begin);
-    }
+    std::string GetHeaderValue(const std::string& name) const;
 
     // Gets the unparsed string that represents the request
     std::string raw_request() const;
@@ -51,8 +40,8 @@ public:
     // Gets the resource identifier for the request
     std::string uri() const;
 
-    // Returns true if out contains the URI converted to a file system path
-    bool path(std::string& out) const;
+    // Returns the path represented by the URI or the empty string if invalid
+    std::string path() const;
 
     // Gets the HTTP version the request was made with
     std::string version() const;
@@ -98,12 +87,13 @@ private:
 
     unsigned long long remaining; // Used to track remaining characters to parse
 
-    std::string raw_request_;     // The entire, unparsed request as a string
-    std::string method_;  // Indicates what is to be performed
-    std::string uri_;     // Identifies the resource for the request
-    std::string version_; // HTTP version the requester is using
-    Headers     headers_; // Headers included in the request
-    std::string body_;    // Body of the request
+    std::string raw_request_; // The entire, unparsed request as a string
+    std::string method_;      // Indicates what is to be performed
+    std::string uri_;         // Identifies the resource for the request
+    std::string path_;        // Path represented by the URI
+    std::string version_;     // HTTP version the requester is using
+    Headers     headers_;     // Headers included in the request
+    std::string body_;        // Body of the request
 };
 
 

@@ -15,10 +15,6 @@
 //
 // Constructed by the RequestHandler, after which the server should call
 // ToString to serialize the request
-
-
-
-
 class Response {
 public:
 

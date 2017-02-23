@@ -41,9 +41,8 @@ private:
     const std::map<std::string, std::unique_ptr<RequestHandler> >& handlers;
 
     std::array<char, max_length> buf; // Buffer used when reading client data
-    // http::request_parser parser;      // Parser for incoming client requests
-    Request        request;     // Structure for storing client requests
-    tcp::socket          socket;      // Used to represent a client
+    Request     request;              // Structure for storing client requests
+    tcp::socket socket;               // Used to represent a client
 };
 
 

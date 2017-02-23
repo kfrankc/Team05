@@ -22,10 +22,10 @@ curl_output_expected_static_image = [
 ec = 0
 
 # Open the web server in a subprocess
-webserver = Popen(["./webserver", "sample_config"], stdout=PIPE)
+webserver = Popen(["./webserver", "example_config"], stdout=PIPE)
 
 # Request an echo from the webserver using curl
-curl = Popen(["curl", "-0", "-s", "localhost:1234/echo"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:2020/echo"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test 1\n")
 sys.stdout.write("==========\n")
@@ -39,7 +39,7 @@ for string in curl_output_expected_echo:
         sys.stdout.write("  " + string + "\n")
 
 # Request a file from the webserver using curl
-curl = Popen(["curl", "-0", "-s", "localhost:1234/static/test_file"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:2020/test_file"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test 2\n")
 sys.stdout.write("==========\n")
@@ -51,7 +51,7 @@ if not curl_output == "TEST\n":
     sys.stdout.write("  TEST\n")
 
 # Request an image file from the webserver using curl
-curl = Popen(["curl", "-0", "-s", "-I", "localhost:1234/static/bunny.jpg"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "-I", "localhost:2020/bunny.jpg"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test 3\n")
 sys.stdout.write("==========\n")
@@ -65,7 +65,7 @@ for string in curl_output_expected_static_image:
         sys.stdout.write("  " + string + "\n")
 
 # Request a file from the webserver using curl that does not exist
-curl = Popen(["curl", "-0", "-s", "localhost:1234/static/doesnotexist"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:2020/doesnotexist"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test 4\n")
 sys.stdout.write("==========\n")

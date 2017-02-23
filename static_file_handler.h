@@ -19,6 +19,11 @@ public:
     // contents of the response object are undefined, and the server will return
     // HTTP code 500
     virtual Status HandleRequest(const Request& request, Response* response);
+
+private:
+
+    std::string path_prefix; // Path prefix used by clients to get this handler
+    std::string root;        // Root path used for retrieving files
 };
 
 

@@ -1,4 +1,5 @@
 #include "request.h"
+#include <memory>
 #include <sstream>
 
 
@@ -7,8 +8,26 @@ Request::Request() : state(_method_start) {
 }
 
 
+// Parses data from the client. The return value is valid when a
+// complete request has been parsed, nullptr if the data is invalid or
+// indeterminate
+std::unique_ptr<Request> Request::Parse(const std::string& raw_request) {
+    std::unique_ptr<Request>    request = std::unique_ptr<Request>(new Request);
+    std::string::const_iterator begin   = raw_request.begin();
+    std::string::const_iterator end     = raw_request.end();
+    while (begin != end) {
+        Result result = request->Consume(*begin++);
+        if (result == good)
+            return request;
+        else if (result == bad)
+            return std::unique_ptr<Request>(nullptr);
+    }
+    return request;
+}
+
+
 // Returns the value for the given header or the empty string
-std::string Request::FindHeaderValue(const std::string& name) const {
+std::string Request::GetHeaderValue(const std::string& name) const {
     for (std::size_t i = 0; i < headers_.size(); i++) {
         if (headers_[i].first == name) {
             return headers_[i].second;
@@ -36,38 +55,9 @@ std::string Request::uri() const {
 }
 
 
-// Returns true if out contains the URI converted to a file system path
-bool Request::path(std::string& out) const {
-    out.clear();
-    out.reserve(uri_.size());
-    for (std::size_t i = 0; i < uri_.size(); ++i) {
-        if (uri_[i] == '%') {
-            if (i + 3 <= uri_.size()) {
-                int value = 0;
-                std::istringstream is(uri_.substr(i + 1, 2));
-                if (is >> std::hex >> value) {
-                    out += static_cast<char>(value);
-                    i += 2;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        } else if (uri_[i] == '+') {
-            out += ' ';
-        } else {
-            out += uri_[i];
-        }
-    }
-
-    // Ensure that the path does not go backwards in the directory structure
-    if (out.find("..") != std::string::npos) return false;
-
-    // If path ends in slash (i.e. is a directory) then add "index.html"
-    if (out[out.size() - 1] == '/') out += "index.html";
-
-    return true;
+// Returns the path represented by the URI or the empty string if invalid
+std::string Request::path() const {
+    return path_;
 }
 
 
@@ -127,7 +117,6 @@ Request::Result Request::Consume(char input) {
     switch (state) {
     case _method_start:
         if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
-            printf("bad1");
             return bad;
         } else {
             state = _method;
@@ -139,7 +128,6 @@ Request::Result Request::Consume(char input) {
             state = _uri;
             return indeterminate;
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
-            printf("bad2");
             return bad;
         } else {
             method_.push_back(input);
@@ -148,9 +136,40 @@ Request::Result Request::Consume(char input) {
     case _uri:
         if (input == ' ') {
             state = _http_version_h;
+
+            // Now that we have the URI, infer the path from it
+            path_.reserve(uri_.size());
+            for (std::size_t i = 0; i < uri_.size(); ++i) {
+                if (uri_[i] == '%') {
+                    if (i + 3 <= uri_.size()) {
+                        int value = 0;
+                        std::istringstream is(uri_.substr(i + 1, 2));
+                        if (is >> std::hex >> value) {
+                            path_ += static_cast<char>(value);
+                            i += 2;
+                        } else {
+                            path_ = std::string();
+                            return indeterminate;
+                        }
+                    } else {
+                        path_ = std::string();
+                        return indeterminate;
+                    }
+                } else if (uri_[i] == '+') {
+                    path_ += ' ';
+                } else {
+                    path_ += uri_[i];
+                }
+            }
+
+            // Ensure that the path does not go backwards in the directory
+            if (path_.find("..") != std::string::npos) path_ = std::string();
+
+            // If path ends in slash (i.e. is a directory) then add "index.html"
+            else if (path_[path_.size() - 1] == '/') path_ += "index.html";
+
             return indeterminate;
         } else if (is_ctl(input)) {
-            printf("bad3");
             return bad;
         } else {
             uri_.push_back(input);
@@ -162,7 +181,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back('H');
             return indeterminate;
         } else {
-            printf("bad4");
             return bad;
         }
     case _http_version_t_1:
@@ -171,7 +189,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back('T');
             return indeterminate;
         } else {
-            printf("bad5");
             return bad;
         }
     case _http_version_t_2:
@@ -180,7 +197,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back('T');
             return indeterminate;
         } else {
-            printf("bad6");
             return bad;
         }
     case _http_version_p:
@@ -189,7 +205,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back('P');
             return indeterminate;
         } else {
-            printf("bad7");
             return bad;
         }
     case _http_version_slash:
@@ -198,7 +213,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back('/');
             return indeterminate;
         } else {
-            printf("bad8");
             return bad;
         }
     case _http_version_major_start:
@@ -207,7 +221,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
-            printf("bad9");
             return bad;
         }
     case _http_version_major:
@@ -219,7 +232,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
-            printf("bad10");
             return bad;
         }
     case _http_version_minor_start:
@@ -228,7 +240,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
-            printf("bad11");
             return bad;
         }
     case _http_version_minor:
@@ -239,7 +250,6 @@ Request::Result Request::Consume(char input) {
             version_.push_back(input);
             return indeterminate;
         } else {
-            printf("bad12");
             return bad;
         }
     case _expecting_newline_1:
@@ -247,7 +257,6 @@ Request::Result Request::Consume(char input) {
             state = _header_line_start;
             return indeterminate;
         } else {
-            printf("bad13");
             return bad;
         }
     case _header_line_start:
@@ -258,7 +267,6 @@ Request::Result Request::Consume(char input) {
             state = _header_lws;
             return indeterminate;
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
-            printf("bad14");
             return bad;
         } else {
             headers_.push_back(std::pair<std::string, std::string>());
@@ -273,7 +281,6 @@ Request::Result Request::Consume(char input) {
         } else if (input == ' ' || input == '\t') {
             return indeterminate;
         } else if (is_ctl(input)) {
-            printf("bad15");
             return bad;
         } else {
             state = _header_value;
@@ -285,7 +292,6 @@ Request::Result Request::Consume(char input) {
             state = _space_before_header_value;
             return indeterminate;
         } else if (!is_char(input) || is_ctl(input) || is_tspecial(input)) {
-            printf("bad16");
             return bad;
         } else {
             headers_.back().first.push_back(input);
@@ -296,7 +302,6 @@ Request::Result Request::Consume(char input) {
             state = _header_value;
             return indeterminate;
         } else {
-            printf("bad17");
             return bad;
         }
     case _header_value:
@@ -304,7 +309,6 @@ Request::Result Request::Consume(char input) {
             state = _expecting_newline_2;
             return indeterminate;
         } else if (is_ctl(input)) {
-            printf("bad18");
             return bad;
         } else {
             headers_.back().second.push_back(input);
@@ -315,21 +319,24 @@ Request::Result Request::Consume(char input) {
             state = _header_line_start;
             return indeterminate;
         } else {
-            printf("bad19");
             return bad;
         }
-    case _expecting_newline_3: {
-        std::string decoded_path;
-        if (input == '\n' && path(decoded_path) &&
-            !(decoded_path.empty() || decoded_path[0] != '/' ||
-            decoded_path.find("..") != std::string::npos)) {
-            // If path ends in slash (i.e. is a directory) then add "index.html"
-            if (decoded_path[decoded_path.size() - 1] == '/') decoded_path += "index.html";
-
-            return good;
+    case _expecting_newline_3:
+        if (input == '\n') {
+            try {
+                remaining = std::stoull(GetHeaderValue("Content-Length"));
+                if (remaining > 0) {
+                    state = _body;
+                    return indeterminate;
+                } else {
+                    return good;
+                }
+            } catch (...) {
+                return good;
+            }
         } else {
             return bad;
-        } }
+        }
     case _body:
         if (remaining > 0) {
             body_.push_back(input);
@@ -338,7 +345,6 @@ Request::Result Request::Consume(char input) {
             return good;
         }
     default:
-        printf("bad22");
         return bad;
     }
 }

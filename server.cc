@@ -38,39 +38,48 @@ void session::do_read() {
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : parse the data from the client
-                Request request;
-                Request::Result result;
-                std::tie(result, std::ignore) = request.Parse(buf.data(),
-                    buf.data() + len);
-                if (result == Request::Result::good) {
-                    // Get the path prefix
-
-                    std::string path;
-                    if(!request.path(path)) {
-                        // TODO: figure out status code
+                std::unique_ptr<Request> request = Request::Parse(std::string(
+                    std::begin(buf), std::end(buf)));
+                if (request) {
+                    // Get the path for determining what handler were using
+                    std::string path = request->path();
+                    if (path.empty()) {
+                        do_write(Response::DefaultResponse(
+                            Response::bad_request));
+                        return;
                     }
-                    std::string path_prefix = path.substr(0,
-                        path.find("/", 1)); 
+
+                    // Get the correct request handler per all possible prefixes
+                    //  Note: This will loop until it reaches the empty string,
+                    //  and we are guarenteed the empty string is in the map
+                    std::string path_prefix = path;
+                    std::map<std::string, std::unique_ptr<RequestHandler>
+                        >::const_iterator it = handlers.find(path_prefix);
+                    while (it == handlers.end()) {
+                        // For every slash, we check if a handler exists both
+                        // with the slash and without it before moving on to
+                        // the next least-nested prefix
+                        std::size_t slash_pos = path_prefix.find_last_of("/");
+                        path_prefix = path_prefix.substr(0, slash_pos + 1);
+                        it = handlers.find(path_prefix);
+                        if (it == handlers.end()) {
+                            path_prefix = path_prefix.substr(0, slash_pos);
+                            it = handlers.find(path_prefix);
+                        }
+                    }
 
                     // Handle the request or return response code 500 if not OK
-                    Response response;
-                    std::map<std::string, std::unique_ptr<RequestHandler> >::const_iterator it;
-                    it = handlers.find(path_prefix);
                     RequestHandler::Status status;
-                    if (it != handlers.end()) {
-                        status = it->second->HandleRequest(request, &response);
-                    } else {
-                        // TODO: Error handle
-                    }
+                    Response response;
+                    status = it->second->HandleRequest(*request, &response);
                     if (status == RequestHandler::OK) {
                         do_write(response);
                     } else {
-                        do_write(Response::DefaultResponse(Response::internal_server_error));
+                        do_write(Response::DefaultResponse(
+                            Response::internal_server_error));
                     }
-                } else if (result == Request::bad) {
-                    do_write(Response::DefaultResponse(Response::bad_request));
                 } else {
-                    do_read();
+                    do_write(Response::DefaultResponse(Response::bad_request));
                 }
             }
         });
@@ -82,22 +91,22 @@ void session::do_write(const Response& res) {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 
-    // // Print out the data we're sending to the client
-    // printf("Sending the following to %s\n",
-    //     socket.remote_endpoint().address().to_string().c_str());
-    // printf("==========\n");
-    // printf("%s\n", request.as_string.c_str());
-    // printf("==========\n\n");
+    // Print out the data we're sending to the client
+    std::string res_str = res.ToString();
+    printf("Sending the following to %s\n",
+        socket.remote_endpoint().address().to_string().c_str());
+    printf("==========\n");
+    printf("%s\n", res_str.c_str());
+    printf("==========\n");
 
     // Send the response back to the client and then we're done
-    std::string res_str = res.ToString();
     boost::asio::async_write(socket, boost::asio::buffer(res_str, res_str.size()),
         [this, self](boost::system::error_code ec, std::size_t len) {
             if (ec) {
-                printf("Failed to send data to %s\n\n",
+                printf("Failed to send data to %s\n",
                     socket.remote_endpoint().address().to_string().c_str());
             }
-            printf("Amount of data written: %zu\n\n", len);
+            printf("Amount of data written: %zu bytes\n\n", len);
         });
 }
 

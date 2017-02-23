@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
         // Start the server
         boost::asio::io_service io_service;
         server s(io_service, port, std::move(handlers));
-        printf("Running server on port %d...\n", port);
+        printf("Running server on port %d...\n\n", port);
         io_service.run();
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";

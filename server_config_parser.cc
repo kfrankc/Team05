@@ -1,5 +1,6 @@
 #include "server_config_parser.h"
 #include "request_handler.h"
+#include <stdio.h>
 
 
 // Constructor: pass in a config file to be parsed for its contents
@@ -15,16 +16,62 @@ int NginxServerConfigParser::ParseRequestHandlers(
 std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out) {
     // Check config file for request handlers to add
     for (size_t i = 0; i < config.statements.size(); i++) {
-        // TODO: Add validation to config file syntax
-        if (config.statements[i]->tokens[0] == "path") {
-            auto handler = RequestHandler::CreateByName(
-                              config.statements[i]->tokens[2].c_str());
-            handler->Init(config.statements[i]->tokens[1],
-                         *(config.statements[i]->child_block));
-            handlers_out.insert(std::pair<std::string, std::unique_ptr<RequestHandler> >(
-                          config.statements[i]->tokens[1],
-                          std::move(std::unique_ptr<RequestHandler>(handler))));
+        // Only attempt to read statements with a first token we care about
+        if (config.statements[i]->tokens.size() > 0) {
+            if (config.statements[i]->tokens[0] == "path") {
+                // Paths must have 2 extra tokens past the first "path" one
+                if (config.statements[i]->tokens.size() > 2) {
+                    auto handler = RequestHandler::CreateByName(
+                        config.statements[i]->tokens[2].c_str());
+                    if (handler) {
+                        if (handler->Init(config.statements[i]->tokens[1],
+                            *(config.statements[i]->child_block)) ==
+                            RequestHandler::OK) {
+                            handlers_out.insert(std::pair<std::string,
+                                std::unique_ptr<RequestHandler> >(
+                                config.statements[i]->tokens[1],
+                                std::move(std::unique_ptr<RequestHandler>(
+                                handler))));
+                        }
+                    } else {
+                        printf("Handler does not exist (%s)",
+                            config.statements[i]->tokens[2].c_str());
+                    }
+                } else {
+                    printf("\"path\" statement in config needs more tokens\n");
+                }
+            } else if (config.statements[i]->tokens[0] == "default") {
+                // Default must have 1 extra tokens past the first "default" one
+                if (config.statements[i]->tokens.size() > 1) {
+                    auto handler = RequestHandler::CreateByName(
+                        config.statements[i]->tokens[1].c_str());
+                    if (handler) {
+                        if (handler->Init("",
+                            *(config.statements[i]->child_block)) ==
+                            RequestHandler::OK) {
+                            handlers_out.insert(std::pair<std::string,
+                                std::unique_ptr<RequestHandler> >("",
+                                std::move(std::unique_ptr<RequestHandler>(
+                                handler))));
+                        }
+                    } else {
+                        printf("Handler does not exist (%s)",
+                            config.statements[i]->tokens[1].c_str());
+                    }
+                } else {
+                    printf("\"default\" statement in config needs more tokens\n");
+                }
+            }
         }
+    }
+
+    // Ensure that a default handler is made
+    if (handlers_out.find("") == handlers_out.end()) {
+        auto handler = RequestHandler::CreateByName("NotFoundHandler");
+        handler->Init("", NginxConfig());
+        handlers_out.insert(std::pair<std::string,
+            std::unique_ptr<RequestHandler> >("",
+            std::move(std::unique_ptr<RequestHandler>(handler))));
     }
 
     return handlers_out.size();
@@ -39,10 +86,20 @@ ServerSettings& server_settings_out) {
 
     for (size_t i = 0; i < config.statements.size(); i++) {
         if (config.statements[i]->tokens[0] == "port") {
-            server_settings_out.port =
-                                  std::stoi(config.statements[i]->tokens[1]);
+            if (server_settings_out.port == -1) {
+                try {
+                    int port = std::stoi(config.statements[i]->tokens[1]);
+                    if (port >= 0 && port <= 65535) {
+                        server_settings_out.port =
+                            std::stoi(config.statements[i]->tokens[1]);
+                    }
+                } catch (...) {}
+            } else {
+                printf("Multiple ports found in config file\n");
+            }
         }
     }
 
     return server_settings_out.port;
 }
+

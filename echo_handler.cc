@@ -6,8 +6,6 @@
 // config is the contents of the child block for this handler ONLY
 RequestHandler::Status EchoHandler::Init(const std::string& uri_prefix, 
 const NginxConfig& config) {
-    SetUriPrefix(uri_prefix);
-    SetConfig(config);
     // Nothing special is needed to initialize the echo handler
     return RequestHandler::OK;
 }

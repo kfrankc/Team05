@@ -5,10 +5,9 @@
 // uri_prefix is the value in the config file that this handler will run for
 // config is the contents of the child block for this handler ONLY
 RequestHandler::Status NotFoundHandler::Init(const std::string& uri_prefix, 
-const NginxConfig& config) :
-request_uri_prefix(uri_prefix),
-request_config(config) {
+const NginxConfig& config) {
     // Nothing special is needed to initialize the 404 handler
+    //  Note: StaticFileHandler does not call Init when it uses NotFoundHandler
     return RequestHandler::OK;
 }
 

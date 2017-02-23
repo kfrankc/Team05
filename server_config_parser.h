@@ -6,7 +6,7 @@
 
 struct ServerSettings {
     int port;
-    // TODO: Add in more server specific configurations here
+    // Add in more server specific configurations here
 };
 
 // The driver that parses a config file for port and request handlers

@@ -203,7 +203,7 @@ std::string ToHtml(Response::ResponseCode status)
 
 } // namespace DefaultResponse
 
-// Converts response to a string representing data to be sent to the client
+
 // Creates a default Response for a given status code
 Response Response::DefaultResponse(Response::ResponseCode status) {
     Response r;
@@ -284,7 +284,7 @@ void Response::SetStatus(const ResponseCode code) {
 
 // Converts response to a string representing data to be sent to the client
 std::string Response::ToString() const {
-    std::string response_string = "";
+    std::string response_string;
     response_string += StatusString::ToString(status);
     for (std::size_t i = 0; i < headers.size(); ++i) {
         const Response::Header& h = headers[i];

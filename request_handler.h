@@ -1,3 +1,5 @@
+// Based off of https://github.com/jfarrell468/registerer
+
 #ifndef REQUEST_HANDLER_H
 #define REQUEST_HANDLER_H
 
@@ -7,6 +9,7 @@
 #include "config_parser.h"
 #include "request.h"
 #include "response.h"
+
 
 // Represents the parent of all request handlers. Implementations should expect
 // to be long lived and created at server construction
@@ -34,20 +37,6 @@ public:
     // HTTP code 500
     virtual Status HandleRequest(const Request& request,
                                  Response* response) = 0;
-
-
-    void SetUriPrefix(const std::string& prefix);
-    void SetConfig(const NginxConfig& config);
-
-    std::string GetUriPrefix() const;
-    NginxConfig GetConfig() const;
-
-
-
-
-private:
-    std::string request_uri_prefix; // Request URI prefix of handler
-    NginxConfig request_config;     // Request config child block of handler
 };
 
 
