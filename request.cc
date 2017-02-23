@@ -12,15 +12,19 @@ Request::Request() : state(_method_start) {
 // complete request has been parsed, nullptr if the data is invalid or
 // indeterminate
 std::unique_ptr<Request> Request::Parse(const std::string& raw_request) {
+    Result result = indeterminate;
     std::unique_ptr<Request>    request = std::unique_ptr<Request>(new Request);
     std::string::const_iterator begin   = raw_request.begin();
     std::string::const_iterator end     = raw_request.end();
     while (begin != end) {
-        Result result = request->Consume(*begin++);
+        result = request->Consume(*begin++);
         if (result == good)
             return request;
         else if (result == bad)
             return std::unique_ptr<Request>(nullptr);
+    }
+    if (result == indeterminate) {
+        return std::unique_ptr<Request>(nullptr);    
     }
     return request;
 }
@@ -338,9 +342,10 @@ Request::Result Request::Consume(char input) {
             return bad;
         }
     case _body:
-        if (remaining > 0) {
-            body_.push_back(input);
-            remaining--;
+        body_.push_back(input);
+        remaining--;
+        if (remaining > 0) { 
+            return indeterminate;
         } else {
             return good;
         }

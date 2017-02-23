@@ -2,8 +2,8 @@
 TARGET=webserver
 
 # Test executables
-TESTEXEC=config_parser_test response_test #server_config_parser_test
-GCOVEXEC=config_parser_gcov response_gcov #server_config_parser_gcov
+TESTEXEC=config_parser_test response_test request_test #server_config_parser_test
+GCOVEXEC=config_parser_gcov response_gcov request_gcov #server_config_parser_gcov
 
 # GoogleTest directory and output files
 GTEST_DIR=googletest/googletest
@@ -63,6 +63,14 @@ response_test: test_setup response.cc response_test.cc
 
 response_gcov: response_test
 	gcov -r response.cc > response_gcov.txt	
+
+request_test: test_setup request.cc request_test.cc
+	g++ $(GCOVFLAGS) $(TESTFLAGS) request_test.cc request.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
+	./$@
+
+request_gcov: request_test
+	gcov -r request.cc > request_gcov.txt	
+
 
 #server_config_parser_test: test_setup server_config_parser.cc server_config_parser_test.cc
 #	g++ $(GCOVFLAGS) $(TESTFLAGS) server_config_parser_test.cc server_config_parser.cc config_parser.cc response.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
