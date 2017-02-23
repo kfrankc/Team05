@@ -16,6 +16,14 @@ in the project directory. Our tests can be run via "make test", and test
 coverage can be measured with "make test_gcov". We also implement "make  
 clean" which we find necessary after running our tests.  
 
+Our code is all in the root directory of the project folder. It starts  
+main.cc, which loads up the config file via our server_config_parser.cc then  
+quickly yields most the heavy-duty work to server.cc. Within server.cc,  
+our request.cc file parses incoming requests from clients, and then server.cc  
+uses the handlers it parsed from the config file and the interface in  
+request_handler.h to process these parsed requests. Finally, a response is  
+generated using the response.cc interface and forwarded back to the client.  
+
 In order to add a new handler, you will need to first create a header and  
 implementation file for it. Then, add the file to be built via the  
 Makefile. This is as easy as adding the implementation file to the SRC  
