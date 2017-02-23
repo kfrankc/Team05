@@ -341,6 +341,7 @@ Request::Result Request::Consume(char input) {
         if (remaining > 0) {
             body_.push_back(input);
             remaining--;
+            return indeterminate;
         } else {
             return good;
         }

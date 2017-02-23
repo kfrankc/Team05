@@ -32,14 +32,13 @@ int main(int argc, char* argv[]) {
 
         // Parse the request handlers from the config file
         std::map<std::string, std::unique_ptr<RequestHandler> > handlers;
-        server_parser.ParseRequestHandlers(handlers);
+        std::map<std::string, std::string> handler_info;
+        server_parser.ParseRequestHandlers(handlers, handler_info);
         printf("%lu handlers parsed\n", (unsigned long int)(handlers.size()));
 
         // Start the server
-        boost::asio::io_service io_service;
-        server s(io_service, port, std::move(handlers));
         printf("Running server on port %d...\n\n", port);
-        io_service.run();
+        Server::Run(port, std::move(handlers), std::move(handler_info));
     } catch (std::exception& e) {
         std::cerr << "Exception: " << e.what() << "\n";
     }

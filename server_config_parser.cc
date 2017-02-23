@@ -1,4 +1,5 @@
 #include "server_config_parser.h"
+#include "server.h"
 #include "request_handler.h"
 #include <stdio.h>
 
@@ -13,7 +14,8 @@ NginxServerConfigParser::NginxServerConfigParser(const char* config_file) {
 // Parses all server request handlers and stores the parsed
 // handlers in a vector out-param. Returns number of request handlers found
 int NginxServerConfigParser::ParseRequestHandlers(
-std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out) {
+std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out,
+std::map<std::string, std::string>& handler_info_out) {
     // Check config file for request handlers to add
     for (size_t i = 0; i < config.statements.size(); i++) {
         // Only attempt to read statements with a first token we care about
@@ -32,6 +34,8 @@ std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out) {
                                 config.statements[i]->tokens[1],
                                 std::move(std::unique_ptr<RequestHandler>(
                                 handler))));
+                            handler_info_out[config.statements[i]->tokens[1]] =
+                                config.statements[i]->tokens[2];
                         }
                     } else {
                         printf("Handler does not exist (%s)",
@@ -53,6 +57,8 @@ std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out) {
                                 std::unique_ptr<RequestHandler> >("",
                                 std::move(std::unique_ptr<RequestHandler>(
                                 handler))));
+                            handler_info_out["(default)"] =
+                                config.statements[i]->tokens[1];
                         }
                     } else {
                         printf("Handler does not exist (%s)",
@@ -72,6 +78,7 @@ std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out) {
         handlers_out.insert(std::pair<std::string,
             std::unique_ptr<RequestHandler> >("",
             std::move(std::unique_ptr<RequestHandler>(handler))));
+        handler_info_out["(default)"] = "NotFoundHandler";
     }
 
     return handlers_out.size();
