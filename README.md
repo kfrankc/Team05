@@ -32,5 +32,9 @@ simple example, and static_file_handler.h for a more complete one. All
 that is left after making the header file is to fill your implementation  
 with code that takes advantage of our virtual functions Init and  
 HandleRequest. Please read our comments and check out our own handlers for  
-more information.
+more information.  
+
+Once you are all done with making your handler, you can use it by running the  
+server with a config file that gives your handler a path. Please see  
+example_config for an example on how to do that.
 
