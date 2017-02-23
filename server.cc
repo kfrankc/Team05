@@ -14,7 +14,7 @@ using boost::asio::ip::tcp;
 
 
 // Constructor taking a list of HTTP request handlers
-session::session(tcp::socket sock,
+Session::Session(tcp::socket sock,
 const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers) :
 handlers(hndlers), socket(std::move(sock)) {
 
@@ -22,13 +22,13 @@ handlers(hndlers), socket(std::move(sock)) {
 
 
 // Starts the session between client and server
-void session::start() {
+void Session::start() {
     do_read();
 }
 
 
 // Callback for when a client should have its data read
-void session::do_read() {
+void Session::do_read() {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 
@@ -44,7 +44,7 @@ void session::do_read() {
                     // Get the path for determining what handler were using
                     std::string path = request->path();
                     if (path.empty()) {
-                        do_write(Response::DefaultResponse(
+                        do_write("(bad request)", Response::DefaultResponse(
                             Response::bad_request));
                         return;
                     }
@@ -73,13 +73,14 @@ void session::do_read() {
                     Response response;
                     status = it->second->HandleRequest(*request, &response);
                     if (status == RequestHandler::OK) {
-                        do_write(response);
+                        do_write(request->uri(), response);
                     } else {
-                        do_write(Response::DefaultResponse(
+                        do_write(request->uri(), Response::DefaultResponse(
                             Response::internal_server_error));
                     }
                 } else {
-                    do_write(Response::DefaultResponse(Response::bad_request));
+                    do_write("(bad request)", Response::DefaultResponse(
+                        Response::bad_request));
                 }
             }
         });
@@ -87,7 +88,7 @@ void session::do_read() {
 
 
 // Callback for when a client should be written to
-void session::do_write(const Response& res) {
+void Session::do_write(const std::string& uri, const Response& res) {
     // Create a reference to "this" to ensure it outlives the async operation
     auto self(shared_from_this());
 
@@ -98,6 +99,10 @@ void session::do_write(const Response& res) {
     printf("==========\n");
     printf("%s\n", res_str.c_str());
     printf("==========\n");
+
+    // Track the responses all responses that are sent out
+    Server::GetInstance()->requests.push_back(
+        std::make_pair(uri, (int)res.GetStatus()));
 
     // Send the response back to the client and then we're done
     boost::asio::async_write(socket, boost::asio::buffer(res_str, res_str.size()),
@@ -112,17 +117,18 @@ void session::do_write(const Response& res) {
 
 
 // Constructor taking a list of HTTP request handlers
-server::server(boost::asio::io_service& io_service, int port,
-const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers) :
-handlers(hndlers), acceptor(io_service, tcp::endpoint(tcp::v4(), port)),
-socket(io_service) {
+Server::Server(boost::asio::io_service& io_service, int port,
+const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers,
+const std::map<std::string, std::string>& hndler_info) :
+handlerInfo(hndler_info), handlers(hndlers),
+acceptor(io_service, tcp::endpoint(tcp::v4(), port)), socket(io_service) {
     // Start accepting clients as soon as the server instance is created
     do_accept();
 }
 
 
 // Callback for when a client attempts to connect
-void server::do_accept()
+void Server::do_accept()
 {
     // Accept clients continuously in other threads than the main thread
     acceptor.async_accept(socket,
@@ -130,7 +136,7 @@ void server::do_accept()
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : creates a session between the client and server
-                std::make_shared<session>(std::move(socket), handlers)->start();
+                std::make_shared<Session>(std::move(socket), handlers)->start();
             }
 
             // Repeatedly do this

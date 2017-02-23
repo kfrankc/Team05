@@ -19,7 +19,8 @@ public:
     // Parses all server request handlers and stores the parsed handlers in 
     // map out-param. Returns number of request handlers found
     int ParseRequestHandlers(
-        std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out);
+        std::map<std::string, std::unique_ptr<RequestHandler> >& handlers_out,
+        std::map<std::string, std::string>& handler_info_out);
 
     // Parses all server settings and stores the parsed server setup
     // in server_config out-param. Returns port number (-1 if no number is

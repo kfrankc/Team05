@@ -4,8 +4,9 @@
 
 class PortParseTest : public ::testing::Test {
 protected:
+
     // Test to check if server parser can read in port correctly
-    // Returns true if the port is not -1
+    //  Returns true if the port is not -1
     bool GetPortNumber(std::string config_contents) {
         int fd;
         char name[] = "/tmp/fileXXXXXX";
@@ -29,26 +30,28 @@ protected:
     }
 
     int port;
-    server_config server_settings;
-
+    ServerSettings server_settings;
 };
 
 
 TEST_F(PortParseTest, ValidPortConfig) {
-    ASSERT_TRUE(GetPortNumber("port 80800;"));
-    EXPECT_EQ(80800, port);
+    ASSERT_TRUE(GetPortNumber("port 8080;"));
+    EXPECT_EQ(8080, port);
 }
 
 
 TEST_F(PortParseTest, InvalidPortConfig) {
-    EXPECT_FALSE(GetPortNumber("Port 80800;"));
+    EXPECT_FALSE(GetPortNumber("pOrT 8080;"));
+    EXPECT_FALSE(GetPortNumber("port 80800;"));
 }
+
 
 class HandlerParseTest : public ::testing::Test {
 protected:
+
     // Test to check the number of handlers parsed from config file
-    // Returns true iff at least one handler is parsed
-    bool GetNumberOfHandlersParsed(std::string config_contents) {
+    //  Returns true iff at least one handler is parsed
+    int GetNumberOfHandlersParsed(std::string config_contents) {
         int fd;
         char name[] = "/tmp/fileXXXXXX";
 
@@ -62,34 +65,51 @@ protected:
         NginxServerConfigParser server_parser(name);
         
         // Parse the echo and static file request handlers from the config file
-        server_parser.ParseRequestHandlers(handlers);
-        
-        num_parsed_handlers = handlers.size();
-        return num_parsed_handlers;
+        return server_parser.ParseRequestHandlers(handlers, handler_info);
     }
 
-    std::vector<std::unique_ptr<http::handler> > handlers;
-    int num_parsed_handlers;
-    
+    std::map<std::string, std::unique_ptr<RequestHandler> > handlers;
+    std::map<std::string, std::string> handler_info;
 };
 
+
 TEST_F(HandlerParseTest, NoHandlersConfig) {
-    ASSERT_FALSE(GetNumberOfHandlersParsed("no /handlers;"));
-    EXPECT_EQ(num_parsed_handlers, 0);
+    EXPECT_EQ(GetNumberOfHandlersParsed("no /handlers;"), 1);
+    EXPECT_EQ(handlers.size(), 1);
+    EXPECT_EQ(handler_info.size(), 1);
+    EXPECT_TRUE(handlers.find("") != handlers.end());
+    EXPECT_EQ(handler_info["(default)"], "NotFoundHandler");
 }
+
+
+TEST_F(HandlerParseTest, DefaultHandlerConfig) {
+    EXPECT_EQ(GetNumberOfHandlersParsed("default EchoHandler {};"), 1);
+    EXPECT_EQ(handlers.size(), 1);
+    EXPECT_TRUE(handlers.find("") != handlers.end());
+    EXPECT_EQ(handler_info.size(), 1);
+    EXPECT_EQ(handler_info["(default)"], "EchoHandler");
+}
+
 
 TEST_F(HandlerParseTest, SomeHandlersConfig) {
-    ASSERT_TRUE(GetNumberOfHandlersParsed("echo /echo;\nstatic /static ./;"));
-    EXPECT_EQ(num_parsed_handlers, 2);
+    EXPECT_EQ(GetNumberOfHandlersParsed("path /echo EchoHandler {}\n"
+        "path / StaticFileHandler {\n"
+        "  root ./;\n"
+        "}"), 3);
+    EXPECT_EQ(handlers.size(), 3);
+    EXPECT_EQ(handler_info.size(), 3);
+    EXPECT_TRUE(handlers.find("/echo") != handlers.end());
+    EXPECT_EQ(handler_info["/echo"], "EchoHandler");
+    EXPECT_TRUE(handlers.find("/") != handlers.end());
+    EXPECT_EQ(handler_info["/"], "StaticFileHandler");
+    EXPECT_TRUE(handlers.find("") != handlers.end());
+    EXPECT_EQ(handler_info["(default)"], "NotFoundHandler");
 }
 
-TEST_F(HandlerParseTest, ImproperEchoHandlerConfig) {
-    ASSERT_FALSE(GetNumberOfHandlersParsed("echo ;\n echo echo;"));
-    EXPECT_EQ(num_parsed_handlers, 0);
-}
 
-TEST_F(HandlerParseTest, ImproperStaticHandlerConfig) {
-    ASSERT_FALSE(GetNumberOfHandlersParsed("static ;\nstatic static /;"));
-    EXPECT_EQ(num_parsed_handlers, 0);
+TEST_F(HandlerParseTest, ImproperHandlerConfig) {
+    EXPECT_EQ(GetNumberOfHandlersParsed("path /;path StaticFileHandler"), 1);
+    EXPECT_TRUE(handlers.find("") != handlers.end());
+    EXPECT_EQ(handler_info["(default)"], "NotFoundHandler");
 }
 

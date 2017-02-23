@@ -1,4 +1,5 @@
 #include "status_handler.h"
+#include "server.h"
 
 
 // Initializes the handler. Returns OK if successful
@@ -6,7 +7,7 @@
 // config is the contents of the child block for this handler ONLY
 RequestHandler::Status StatusHandler::Init(const std::string& uri_prefix, 
 const NginxConfig& config) {
-    // TODO
+    // The status handler does not do any initializing
     return RequestHandler::OK;
 }
 
@@ -17,8 +18,51 @@ const NginxConfig& config) {
 // HTTP code 500
 RequestHandler::Status StatusHandler::HandleRequest(const Request& request, 
 Response* response) {
-    // TODO
-    *response = Response::DefaultResponse(Response::not_implemented);
+    // Get all the info we need from the server
+    const Server& s = *Server::GetInstance();
+    const std::map<std::string, std::string>& hi = s.GetHandlersByUrl();
+    const std::vector<std::pair<std::string, int> >& rh = s.GetRequestHistory();
+
+    // Begin the HTML of our status page
+    std::string html = "<html><head><title>Webserver Status</title></head>"
+        "<body>\r\n"
+        "Total number of request handlers: ";
+    html += std::to_string(hi.size());
+    html += "\r\n<br><br><table style=\"width:640px\"><tr>"
+        "<th align=\"left\">URL Prefix</th>"
+        "<th align=\"left\" style=\"width:100px\">Handler Type</th>"
+        "</tr>";
+
+    // Write out the table of requests
+    for (auto it = hi.begin(); it != hi.end(); ++it) {
+        html += "<tr><td>";
+        html += it->first;
+        html += "</td><td style=\"width:100px\">";
+        html += it->second;
+        html += "</td></tr>";
+    }
+
+    // Continue to the next table
+    html += "</table><br><br><br>\r\n"
+        "Total number of requests received so far: ";
+    html += std::to_string(rh.size());
+    html += "\r\n<br><br><table style=\"width:640px\"><tr>"
+        "<th align=\"left\">Request URI</th>"
+        "<th align=\"left\" style=\"width:100px\">Response Code</th>"
+        "</tr>";
+
+    // Write out the table of requests
+    for (size_t i = 0; i < rh.size(); i++) {
+        html += "<tr><td>";
+        html += rh[i].first;
+        html += "</td><td style=\"width:100px\">";
+        html += std::to_string(rh[i].second);
+        html += "</td></tr>";
+    }
+
+    // Finish the HTML of our status page
+    html += "</table></body></html>";
+    *response = Response::HtmlResponse(std::move(html));
     return RequestHandler::OK;
 }
 
