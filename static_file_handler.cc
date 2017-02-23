@@ -54,16 +54,15 @@ const NginxConfig& config) {
         }
     }
     if (!root.empty()) {
+        // Store the path prefix for later use
+        path_prefix = uri_prefix;
         return RequestHandler::OK;
     } else {
         printf("No root provided to StaticFileHandler\n");
         return RequestHandler::Error;
     }
 
-    // Store the path prefix for later use
-    path_prefix = uri_prefix;
-
-    return RequestHandler::OK;
+    
 }
 
 
@@ -77,6 +76,7 @@ Response* response) {
     std::string path = request.path();
     path = path.substr(path_prefix.size());
 
+    printf("path_prefix:%s, original path:%s, new path:%s\n", path_prefix.c_str(), request.path().c_str(), path.c_str() );
     // Determine the file extension
     std::size_t last_slash_pos = path.find_last_of("/");
     std::size_t last_dot_pos   = path.find_last_of(".");
