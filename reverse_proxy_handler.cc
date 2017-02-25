@@ -1,4 +1,3 @@
-#include "request_handler.h"
 #include "reverse_proxy_handler.h"
 
 // Initializes the handler. Returns OK if successful
