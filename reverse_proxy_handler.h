@@ -18,6 +18,11 @@ public:
     // contents of the response object are undefined, and the server will return
     // HTTP code 500
     virtual Status HandleRequest(const Request& request, Response* response);
+
+private:
+
+    std::string remote_host;
+    std::string remote_port;
 };
 
 REGISTER_REQUEST_HANDLER(ReverseProxyHandler);
