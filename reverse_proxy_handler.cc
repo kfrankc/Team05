@@ -28,8 +28,6 @@ const NginxConfig& config) {
         }
     }
     if (!remote_host.empty() && !remote_port.empty()) {
-        // Store the path prefix for later use
-        path_prefix = uri_prefix;
         return RequestHandler::OK;
     } else {
         printf("Missing remote_port or remote_host provided to StaticFileHandler\n");
