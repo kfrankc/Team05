@@ -144,11 +144,11 @@ void Server::do_accept()
                 std::thread request_thread([session_ptr] { 
                     session_ptr->start(); 
                 });
-                std::cout << "Thread created." << std::endl;
-                
-                // Join up after the request thread completes execution
-                request_thread.join();
-                std::cout << "Thread request completed." << std::endl;
+                printf("Thread created.\n");
+
+                // Thread detached to continue processing request independently
+                request_thread.detach();
+                printf("Thread detached.\n");
             }
 
             // Repeatedly do this
