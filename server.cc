@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
+#include <thread>
 #include <boost/asio.hpp>
 #include "request.h"
 #include "response.h"
@@ -136,7 +137,18 @@ void Server::do_accept()
             // Check if an error has occurred during the connection
             if (!ec) {
                 // No error : creates a session between the client and server
-                std::make_shared<Session>(std::move(socket), handlers)->start();
+                
+                // This session makes a thread per request
+                auto session_ptr = std::make_shared<Session>(std::move(socket),
+                                                             handlers);
+                std::thread request_thread([session_ptr] { 
+                    session_ptr->start(); 
+                });
+                std::cout << "Thread created." << std::endl;
+                
+                // Join up after the request thread completes execution
+                request_thread.join();
+                std::cout << "Thread request completed." << std::endl;
             }
 
             // Repeatedly do this
