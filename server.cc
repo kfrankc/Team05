@@ -39,7 +39,7 @@ void Session::do_read() {
             if (!ec) {
                 // No error : parse the data from the client
                 std::unique_ptr<Request> request = Request::Parse(std::string(
-                    std::begin(buf), std::end(buf)));
+                buf.data(), len));
                 if (Request::GetParseResult() == Request::good) {
                     // Get the path for determining what handler were using
                     std::string path = request->path();
@@ -149,11 +149,9 @@ void Server::do_accept()
                 std::thread request_thread([session_ptr] { 
                     session_ptr->start(); 
                 });
-                printf("Thread created.\n");
 
                 // Thread detached to continue processing request independently
                 request_thread.detach();
-                printf("Thread detached.\n");
             }
 
             // Repeatedly do this
