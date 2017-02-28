@@ -13,15 +13,26 @@
 class Request {
 public:
 
-    
+    // Parser results from the Parse method
+    enum Result {
+        good,
+        bad,
+        indeterminate
+    };
 
     // Parses data from the client. The return value is valid when a
     // complete request has been parsed, nullptr if the data is invalid or
     // indeterminate
     static std::unique_ptr<Request> Parse(const std::string& raw_request);
+    
+    // Return the result of the request Parse function
+    static Result GetParseResult();    
 
     // Default constructor
     Request();
+    
+    // Reset the request to fresh state
+    void Reset();
 
     // Returns the value for the given header or the empty string
     std::string GetHeaderValue(const std::string& name) const;
@@ -49,13 +60,6 @@ public:
     std::string body() const;
 
 protected:
-
-    // Parser results from the Parse method
-    enum Result {
-        good,
-        bad,
-        indeterminate
-    };
 
     // Handles the next character of input to the parser
     Result Consume(char input);

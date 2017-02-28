@@ -40,7 +40,7 @@ void Session::do_read() {
                 // No error : parse the data from the client
                 std::unique_ptr<Request> request = Request::Parse(std::string(
                     std::begin(buf), std::end(buf)));
-                if (request) {
+                if (Request::GetParseResult() == Request::good) {
                     // Get the path for determining what handler were using
                     std::string path = request->path();
                     if (path.empty()) {
@@ -78,9 +78,12 @@ void Session::do_read() {
                         do_write(request->uri(), Response::DefaultResponse(
                             Response::internal_server_error));
                     }
-                } else {
+                } else if (Request::GetParseResult() == Request::bad) {
                     do_write("(bad request)", Response::DefaultResponse(
                         Response::bad_request));
+                } else {
+                    // Indeterminate request, continue reading
+                    do_read();
                 }
             }
         });

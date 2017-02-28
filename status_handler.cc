@@ -23,7 +23,7 @@ Response* response) {
     s.Lock();
     const std::map<std::string, std::string>& hi = s.GetHandlersByUrl();
     const std::vector<std::pair<std::string, int> >& rh = s.GetRequestHistory();
-   
+
     // Begin the HTML of our status page
     std::string html = "<html><head><title>Webserver Status</title></head>"
         "<body>\r\n"
