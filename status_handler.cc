@@ -19,10 +19,10 @@ const NginxConfig& config) {
 RequestHandler::Status StatusHandler::HandleRequest(const Request& request, 
 Response* response) {
     // Get all the info we need from the server and lock
-    Server& s = *Server::GetInstance();
-    s.Lock();
-    const std::map<std::string, std::string>& hi = s.GetHandlersByUrl();
-    const std::vector<std::pair<std::string, int> >& rh = s.GetRequestHistory();
+    Server* s = Server::GetInstance();
+    s->Lock();
+    const std::map<std::string, std::string>& hi = s->GetHandlersByUrl();
+    const std::vector<std::pair<std::string, int> >& rh = s->GetRequestHistory();
 
     // Begin the HTML of our status page
     std::string html = "<html><head><title>Webserver Status</title></head>"
@@ -62,7 +62,7 @@ Response* response) {
     }
     
     // Unlock server when we're done
-    s.Unlock();
+    s->Unlock();
 
     // Finish the HTML of our status page
     html += "</table></body></html>";

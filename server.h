@@ -52,8 +52,8 @@ class Server  {
 public:
 
     // Returns the instance of the server using the singleton pattern
-    static std::unique_ptr<Server>& GetInstance() {
-        static std::unique_ptr<Server> instance;
+    static Server* GetInstance() {
+        static Server* instance = (Server*) malloc(sizeof(Server));
         return instance;
     }
 
@@ -62,9 +62,9 @@ public:
     const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers,
     const std::map<std::string, std::string>& hndler_info) {
         boost::asio::io_service io_service;
-        std::unique_ptr<Server>& server = GetInstance();
-        server.reset(new Server(io_service, port, std::move(hndlers),
-            std::move(hndler_info)));
+        Server* server = GetInstance();
+        new (server) Server(io_service, port, std::move(hndlers),
+            std::move(hndler_info));
         io_service.run();
     }
 

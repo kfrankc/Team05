@@ -89,7 +89,7 @@ TEST(RequestParser, ValidBodyRequest) {
 
 TEST(RequestParser, IndeterminateRequest) {
     
-    std::string test_string = "GET /echo%20world HT";
+    std::string test_string = "GET /echo HT";
 
     std::unique_ptr<Request> request = Request::Parse(test_string);
 
