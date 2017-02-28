@@ -18,11 +18,12 @@ const NginxConfig& config) {
 // HTTP code 500
 RequestHandler::Status StatusHandler::HandleRequest(const Request& request, 
 Response* response) {
-    // Get all the info we need from the server
-    const Server& s = *Server::GetInstance();
+    // Get all the info we need from the server and lock
+    Server& s = *Server::GetInstance();
+    s.Lock();
     const std::map<std::string, std::string>& hi = s.GetHandlersByUrl();
     const std::vector<std::pair<std::string, int> >& rh = s.GetRequestHistory();
-
+   
     // Begin the HTML of our status page
     std::string html = "<html><head><title>Webserver Status</title></head>"
         "<body>\r\n"
@@ -59,6 +60,9 @@ Response* response) {
         html += std::to_string(rh[i].second);
         html += "</td></tr>";
     }
+    
+    // Unlock server when we're done
+    s.Unlock();
 
     // Finish the HTML of our status page
     html += "</table></body></html>";

@@ -6,6 +6,7 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <mutex>
 #include "request.h"
 #include "request_handler.h"
 #include "response.h"
@@ -78,6 +79,16 @@ public:
         return requests;
     }
 
+    // Lock a critical section
+    void Lock() {
+        mtx.lock();
+    }
+
+    // Unlock a critical section
+    void Unlock() {
+        mtx.unlock();
+    }
+
 protected:
 
     // Session is a friend class so it can edit the below var
@@ -104,6 +115,7 @@ private:
 
     tcp::acceptor acceptor;    // Used in boost.asio to take in new clients
     tcp::socket   socket;      // Used in boost.asio to represent clients
+    std::mutex    mtx;         // Used to lock status handler critical section
 };
 
 #endif // SERVER_H

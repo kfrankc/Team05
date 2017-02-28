@@ -13,7 +13,6 @@
 
 using boost::asio::ip::tcp;
 
-
 // Constructor taking a list of HTTP request handlers
 Session::Session(tcp::socket sock,
 const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers) :
@@ -102,8 +101,11 @@ void Session::do_write(const std::string& uri, const Response& res) {
     printf("==========\n");
 
     // Track the responses all responses that are sent out
-    Server::GetInstance()->requests.push_back(
+    std::unique_ptr<Server>& server = Server::GetInstance();
+    server->Lock();
+    server->requests.push_back(
         std::make_pair(uri, (int)res.GetStatus()));
+    server->Unlock();
 
     // Send the response back to the client and then we're done
     boost::asio::async_write(socket, boost::asio::buffer(res_str, res_str.size()),
