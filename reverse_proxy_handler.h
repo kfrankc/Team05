@@ -21,6 +21,7 @@ public:
 
 private:
 
+    std::string original_uri_prefix;
     std::string remote_host;
     std::string remote_port;
 };
