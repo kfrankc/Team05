@@ -241,6 +241,20 @@ void ReverseProxyHandler::rerouteRelativeUris(std::string& response_body) {
     }
 }
 
+// Helper for editing the path of relative URIs
+// When HTML elements require resources with a path relative to their origin, for
+// example a stylesheet for www.foobar.com/home which has the path:
+// 'href="../css/style.css"', we need to change the '="../"' to '="/home/../"'.
+void ReverseProxyHandler::rerouteRelativeUris(std::string& response_body) {
+    if (original_uri_prefix != "/") {
+        std::string new_href = "href=\"" + original_uri_prefix + "/";
+        boost::replace_all(response_body, "href=\"/", new_href);
+
+        std::string new_src = "src=\"" + original_uri_prefix + "/";
+        boost::replace_all(response_body, "src=\"/", new_src);
+    }
+}
+
 // Handles an HTTP request, and generates a response. Returns a response code
 // indicating success or failure condition. If ResponseCode is not OK, the
 // contents of the response object are undefined, and the server will return
