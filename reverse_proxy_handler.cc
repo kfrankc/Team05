@@ -51,6 +51,34 @@ RequestHandler::Status ReverseProxyHandler::Init(const std::string& uri_prefix,
     }
 }
 
+// Helper for 302-redirects
+// Returns the value of the Location header,
+// e.g., "www.exmple.com" for "Location: www.example.com"
+std::string ReverseProxyHandler::getLocationHeaderValue(const std::string& response_buffer_string) {
+    // Grab the Location header line
+    int start_location = response_buffer_string.find("Location:");
+    int end_location = response_buffer_string.find_first_of("\r\n", start_location);
+    std::string location_line = response_buffer_string.substr(start_location, end_location);
+
+    boost::tokenizer<boost::char_separator<char>> tokens
+        = tokenGenerator(location_line, " ");
+
+    // Split the location line to get the value
+    std::string location_value;
+    int i = 0;
+    for (auto cur_token = tokens.begin();
+         cur_token != tokens.end();
+         cur_token++,
+         i++) {
+        if (i == 1) {
+            location_value = *cur_token;
+            break;
+        }
+    }
+
+    return location_value;
+}
+
 std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_uri) {
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);

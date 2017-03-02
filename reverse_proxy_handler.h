@@ -30,6 +30,11 @@ private:
     std::string remote_host;
     std::string remote_port;
 
+    // Helper for 302-redirects
+    // Returns the value of the Location header,
+    // e.g., "www.exmple.com" for "Location: www.example.com"
+    std::string getLocationHeaderValue(const std::string& response_buffer_string);
+
     // Helper for sending proxy requests
     // Returns the string representation of the response received from the remote_host
     // Origin is the remote_host that is the original source of the content
