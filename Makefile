@@ -18,7 +18,7 @@ GCOVFILES=*.gcno *.gcda *.gcov
 CXXFLAGS+=-std=c++11 -pthread -Wall -Werror
 
 # Linker flags
-LDFLAGS+=-lboost_system
+LDFLAGS+=-lboost_system -pthread
 
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
@@ -27,7 +27,7 @@ TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
 SRC=server.cc config_parser.cc response.cc \
 server_config_parser.cc request.cc echo_handler.cc \
 static_file_handler.cc request_handler.cc \
-not_found_handler.cc status_handler.cc
+not_found_handler.cc status_handler.cc reverse_proxy_handler.cc
 
 .PHONY: clean clean_target gcov test test_gcov test_setup
 
@@ -42,7 +42,7 @@ clean: clean_target
 
 test_gcov: $(GCOVEXEC)
 
-test_setup: 
+test_setup:
 	g++ $(TESTFLAGS) -I${GTEST_DIR} -c ${GTEST_DIR}/src/gtest-all.cc
 	ar -rv libgtest.a gtest-all.o
 
@@ -70,7 +70,7 @@ request_test: test_setup request.cc request_test.cc
 	./$@
 
 request_gcov: request_test
-	gcov -r request.cc > request_gcov.txt	
+	gcov -r request.cc > request_gcov.txt
 
 static_file_handler_test: test_setup static_file_handler.cc static_file_handler_test.cc
 	g++ $(GCOVFLAGS) $(TESTFLAGS) static_file_handler_test.cc static_file_handler.cc request.cc response.cc not_found_handler.cc request_handler.cc config_parser.cc ${GTEST_DIR}/src/gtest_main.cc libgtest.a -o $@ $(LDFLAGS)
