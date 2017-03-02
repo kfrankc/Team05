@@ -79,6 +79,65 @@ std::string ReverseProxyHandler::getLocationHeaderValue(const std::string& respo
     return location_value;
 }
 
+// Helper for parsing response code from origin responses
+std::string ReverseProxyHandler::getRemoteResponseCode(const std::string& response_buffer_string) {
+    // Response has the form:
+    // HTTP/1.0 200 OK
+    // Content-Length: 3497
+    // Content-Type: text/plain
+    // <body contents>
+    //
+    // We check just the first line
+    size_t end_first_line = response_buffer_string.find_first_of("\r\n");
+    std::string first_line = response_buffer_string.substr(0, end_first_line);
+
+    // TODO: Move this response-code checking into a helper function
+
+    // Tokenize and check second token for ResponseCode
+    // Based on: https://github.com/UCLA-CS130/Mr.-Robot-et-al./blob/c9b064c68cd4bc1ae6b5c012db59eae9cb8b946d/request.cc#L46
+    boost::tokenizer<boost::char_separator<char>> tokens
+        = tokenGenerator(first_line, " ");
+
+    // Handle response code from remote_host.
+    // remote_host's ResponseCode => our ResponseCode cases:
+    //
+    // 200 => 200
+    // 302 => fetch-loop to 200 or 404 (upon not-found or max-retries)
+    // 404 => 404
+    // 500 => 404
+    std::string return_response_code;
+    int i = 0;
+    for (auto cur_token = tokens.begin();
+         cur_token != tokens.end();
+         cur_token++,
+         i++) {
+        if (i == 1) {
+            std::string remote_response_code = *cur_token;
+            std::cerr << "remote_response_code: " << remote_response_code << std::endl;
+
+            if (remote_response_code == "200") {
+                return_response_code = "200";
+            } else if (remote_response_code == "302") {
+                return_response_code = "302";
+            } else if (remote_response_code == "404") {
+                return_response_code = "404";
+            } else if (remote_response_code == "500") {
+                return_response_code = "404";
+            } else {
+                printf("ReverseProxyHandler does not understand the remote_host's ResponseCode\n");
+                return_response_code = "500";
+            }
+            break;
+        }
+    }
+
+    return return_response_code;
+}
+
+// Helper for sending proxy requests
+// Returns the string representation of the response received from the remote_host
+// Origin is the remote_host that is the original source of the content
+// we're serving on their behalf
 std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_uri) {
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);

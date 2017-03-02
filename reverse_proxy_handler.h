@@ -35,6 +35,9 @@ private:
     // e.g., "www.exmple.com" for "Location: www.example.com"
     std::string getLocationHeaderValue(const std::string& response_buffer_string);
 
+    // Helper for parsing response code from origin responses
+    std::string getRemoteResponseCode(const std::string& response_buffer_string);
+
     // Helper for sending proxy requests
     // Returns the string representation of the response received from the remote_host
     // Origin is the remote_host that is the original source of the content
