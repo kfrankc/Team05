@@ -3,7 +3,12 @@
 
 #include "request_handler.h"
 
-// Retrieves a file from the server's file system
+// Interacts with clients from the Internet at-large
+// as if this server was the one serving up the
+// content requested, rather than the remote servers
+// to which it actually reaches out.
+//
+// See: https://github.com/UCLA-CS130/Mr.-Robot-et-al./issues/62
 class ReverseProxyHandler : public RequestHandler {
 public:
 
@@ -24,6 +29,12 @@ private:
     std::string original_uri_prefix;
     std::string remote_host;
     std::string remote_port;
+
+    // Helper for sending proxy requests
+    // Returns the string representation of the response received from the remote_host
+    // Origin is the remote_host that is the original source of the content
+    // we're serving on their behalf
+    std::string sendRequestToOrigin(const std::string& remote_uri);
 };
 
 REGISTER_REQUEST_HANDLER(ReverseProxyHandler);
