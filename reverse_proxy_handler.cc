@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/replace.hpp>
 #include <boost/asio.hpp>
 #include <boost/tokenizer.hpp>
 #include <iostream>
@@ -170,6 +171,8 @@ std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_u
     char response_buffer[MAX_BUFFER_LENGTH];
     memset(response_buffer, 0, MAX_BUFFER_LENGTH);
 
+    // TODO: need to loop and keep reading if we recieve a large file, `read_some` blocks until
+    // it reads a non-zero number of bytes, but have to somehow check against its return value
     socket.read_some(boost::asio::buffer(response_buffer), ec);
 
     switch (ec.value()) {
@@ -182,6 +185,20 @@ std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_u
     }
 
     return std::string(response_buffer);
+}
+
+// Helper for editing the path of relative URIs
+// When HTML elements require resources with a path relative to their origin, for
+// example a stylesheet for www.foobar.com/home which has the path:
+// 'href="../css/style.css"', we need to change the '="../"' to '="/home/../"'.
+void ReverseProxyHandler::rerouteRelativeUris(std::string& response_body) {
+    if (original_uri_prefix != "/") {
+        std::string new_href = "href=\"" + original_uri_prefix + "/";
+        boost::replace_all(response_body, "href=\"/", new_href);
+
+        std::string new_src = "src=\"" + original_uri_prefix + "/";
+        boost::replace_all(response_body, "src=\"/", new_src);
+    }
 }
 
 // Handles an HTTP request, and generates a response. Returns a response code
@@ -241,7 +258,13 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     int end_headers = response_buffer_string.find("\r\n\r\n");
     std::cerr << "end_headers index: " << end_headers << std::endl;
     // + 4 to erase the double CRLF
+    // TODO: need to make sure content-length is set so the client doesn't hang
+    //    We should probably also be copying most of the headers we recieve from
+    //    the remote_request_response
+    // Right now its a random number (size of most basic echo request)
+    response->AddHeader("Content-Length", "22");
     response_buffer_string.erase(0, end_headers + 4);
+    rerouteRelativeUris(response_buffer_string);
     response->SetBody(response_buffer_string);
 
     return RequestHandler::OK;

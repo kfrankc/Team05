@@ -43,6 +43,12 @@ private:
     // Origin is the remote_host that is the original source of the content
     // we're serving on their behalf
     std::string sendRequestToOrigin(const std::string& remote_uri);
+
+    // Helper for editing the path of relative URIs
+    // When HTML elements require resources with a path relative to their origin, for
+    // example a stylesheet for www.foobar.com/home with the path: 'href="../css/style.css', we
+    // need to change the '../' to '/home/'.
+    void rerouteRelativeUris(std::string& response_body);
 };
 
 REGISTER_REQUEST_HANDLER(ReverseProxyHandler);
