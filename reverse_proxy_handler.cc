@@ -200,62 +200,31 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
       remote_uri = "/";
     }
 
-    std::string response_buffer_string
-        = sendRequestToOrigin(remote_uri);
+    std::string response_buffer_string = sendRequestToOrigin(remote_uri);
 
     if (response_buffer_string == "RequestHandler::Error") {
         return RequestHandler::Error;
     }
 
-    // Response has the form:
-    // HTTP/1.0 200 OK
-    // Content-Length: 3497
-    // Content-Type: text/plain
-    // <body contents>
-    //
-    // We check just the first line
-    size_t end_first_line = response_buffer_string.find_first_of("\r\n");
-    std::string first_line = response_buffer_string.substr(0, end_first_line);
+    std::string return_response_code = getRemoteResponseCode(response_buffer_string);
+    std::cerr << "return_response_code: " << return_response_code << std::endl;
 
-    // Tokenize and check second token for ResponseCode
-    // Based on: https://github.com/UCLA-CS130/Mr.-Robot-et-al./blob/c9b064c68cd4bc1ae6b5c012db59eae9cb8b946d/request.cc#L46
-    boost::tokenizer<boost::char_separator<char>> tokens
-        = tokenGenerator(first_line, " ");
-
-    // Handle response code from remote_host.
-    // remote_host's ResponseCode => our ResponseCode cases:
-    //
-    // 200 => 200
-    // 302 => fetch-loop to 200 or 404 (upon not-found or max-retries)
-    // 404 => 404
-    // 500 => 404
-    std::string return_response_code;
-    int i = 0;
-    for (auto cur_token = tokens.begin();
-         cur_token != tokens.end();
-         cur_token++,
-         i++) {
-        if (i == 1) {
-            std::string remote_response_code = *cur_token;
-            std::cerr << "remote_response_code: " << remote_response_code << std::endl;
-
-            if (remote_response_code == "200") {
-                return_response_code = "200";
-            } else if (remote_response_code == "302") {
-                // TODO: 302 fetch-loop helper
-            } else if (remote_response_code == "404") {
-                return_response_code = "404";
-            } else if (remote_response_code == "500") {
-                return_response_code = "404";
-            } else {
-                printf("ReverseProxyHandler does not understand the remote_host's ResponseCode\n");
-                return_response_code = "500";
-            }
+    // To avoid infinite loops, 302 redirects are followed at most 5 times
+    int num_tries = 0;
+    const int MAX_TRIES = 5;
+    while (return_response_code == "302") {
+        if (num_tries >= MAX_TRIES) {
+            return_response_code = "404";
+            printf("Max number of 302 Found redirects followed. Potential redirect loop.\n");
             break;
         }
-    }
 
-    std::cerr << "return_response_code: " << return_response_code << std::endl;
+        std::string new_remote_uri = getLocationHeaderValue(response_buffer_string);
+        response_buffer_string = sendRequestToOrigin(new_remote_uri);
+        return_response_code = getRemoteResponseCode(response_buffer_string);
+
+        num_tries++;
+    }
 
     if (return_response_code == "200") {
         response->SetStatus(Response::ok);
