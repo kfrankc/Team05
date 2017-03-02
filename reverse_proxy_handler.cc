@@ -51,12 +51,7 @@ RequestHandler::Status ReverseProxyHandler::Init(const std::string& uri_prefix,
     }
 }
 
-// Handles an HTTP request, and generates a response. Returns a response code
-// indicating success or failure condition. If ResponseCode is not OK, the
-// contents of the response object are undefined, and the server will return
-// HTTP code 500
-RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request,
-    Response* response) {
+std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_uri) {
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
     tcp::resolver resolver(io_service);
@@ -71,20 +66,10 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     boost::asio::connect(socket, resolver.resolve(query), ec);
     if (ec == boost::asio::error::not_found) {
         printf("Reverse proxy connection attempt to remote host failed. Check hostname and port number.\n");
-        return RequestHandler::Error;
+        return "RequestHandler::Error";
     }
 
     std::cerr << "Got past connecting to remote_host!" << std::endl;
-
-    // Construct new request to send to remote host
-    // Example: Modify request from: /reverse_proxy/static/file1.txt
-    // to:                           /static/file1.txt
-    std::string remote_uri = request.uri();
-    remote_uri.erase(0, original_uri_prefix.size());
-
-    if (remote_uri.empty()) {
-      remote_uri = "/";
-    }
 
     std::string remote_request
       = "GET " + remote_uri + " HTTP/1.1" + "\r\n\r\n";
@@ -106,25 +91,42 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
         break;
       default:
         std::cout << "Error reading from remote_host, error code: " << ec << std::endl;
-        return RequestHandler::Error;
+        return "RequestHandler::Error";
     }
 
-    // Handle response code from remote_host.
-    // remote_host's ResponseCode => our ResponseCode cases:
-    //
-    // 200 => 200
-    // 302 => fetch-loop to 200 or 404 (upon not-found or max-retries)
-    // 404 => 404
-    // 500 => 404
+    return std::string(response_buffer);
+}
+
+// Handles an HTTP request, and generates a response. Returns a response code
+// indicating success or failure condition. If ResponseCode is not OK, the
+// contents of the response object are undefined, and the server will return
+// HTTP code 500
+RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request,
+    Response* response) {
+    // Construct new request to send to remote host
+    // Example: Modify request from: /reverse_proxy/static/file1.txt
+    // to:                           /static/file1.txt
+    std::string remote_uri = request.uri();
+    remote_uri.erase(0, original_uri_prefix.size());
+
+    if (remote_uri.empty()) {
+      remote_uri = "/";
+    }
+
+    std::string response_buffer_string
+        = sendRequestToOrigin(remote_uri);
+
+    if (response_buffer_string == "RequestHandler::Error") {
+        return RequestHandler::Error;
+    }
 
     // Response has the form:
     // HTTP/1.0 200 OK
     // Content-Length: 3497
     // Content-Type: text/plain
     // <body contents>
-
+    //
     // We check just the first line
-    std::string response_buffer_string(response_buffer);
     size_t end_first_line = response_buffer_string.find_first_of("\r\n");
     std::string first_line = response_buffer_string.substr(0, end_first_line);
 
@@ -133,6 +135,13 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     boost::tokenizer<boost::char_separator<char>> tokens
         = tokenGenerator(first_line, " ");
 
+    // Handle response code from remote_host.
+    // remote_host's ResponseCode => our ResponseCode cases:
+    //
+    // 200 => 200
+    // 302 => fetch-loop to 200 or 404 (upon not-found or max-retries)
+    // 404 => 404
+    // 500 => 404
     std::string return_response_code;
     int i = 0;
     for (auto cur_token = tokens.begin();
@@ -168,8 +177,6 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     } else if (return_response_code == "500") {
         response->SetStatus(Response::internal_server_error);
     }
-
-    // TODO: edge-case: echo needs read until double CR
 
     // Construct response headers by including every line of
     // the remote_host's response after the headers
