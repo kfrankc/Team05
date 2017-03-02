@@ -15,7 +15,7 @@ GCOVFLAGS=-fprofile-arcs -ftest-coverage
 GCOVFILES=*.gcno *.gcda *.gcov
 
 # Compiler flags
-CXXFLAGS+=-std=c++11 -Wall
+CXXFLAGS+=-std=c++11 -pthread -Wall -Werror
 
 # Linker flags
 LDFLAGS+=-lboost_system -pthread

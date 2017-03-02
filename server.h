@@ -6,6 +6,7 @@
 #include <memory>
 #include <utility>
 #include <boost/asio.hpp>
+#include <mutex>
 #include "request.h"
 #include "request_handler.h"
 #include "response.h"
@@ -51,8 +52,8 @@ class Server  {
 public:
 
     // Returns the instance of the server using the singleton pattern
-    static std::unique_ptr<Server>& GetInstance() {
-        static std::unique_ptr<Server> instance;
+    static Server* GetInstance() {
+        static Server* instance = (Server*) malloc(sizeof(Server));
         return instance;
     }
 
@@ -61,9 +62,9 @@ public:
     const std::map<std::string, std::unique_ptr<RequestHandler> >& hndlers,
     const std::map<std::string, std::string>& hndler_info) {
         boost::asio::io_service io_service;
-        std::unique_ptr<Server>& server = GetInstance();
-        server.reset(new Server(io_service, port, std::move(hndlers),
-            std::move(hndler_info)));
+        Server* server = GetInstance();
+        new (server) Server(io_service, port, std::move(hndlers),
+            std::move(hndler_info));
         io_service.run();
     }
 
@@ -76,6 +77,16 @@ public:
     //  Note: the data contained in the pair is URI and response code
     const std::vector<std::pair<std::string, int> >& GetRequestHistory() const {
         return requests;
+    }
+
+    // Lock a critical section
+    void Lock() {
+        mtx.lock();
+    }
+
+    // Unlock a critical section
+    void Unlock() {
+        mtx.unlock();
     }
 
 protected:
@@ -104,6 +115,7 @@ private:
 
     tcp::acceptor acceptor;    // Used in boost.asio to take in new clients
     tcp::socket   socket;      // Used in boost.asio to represent clients
+    std::mutex    mtx;         // Used to lock status handler critical section
 };
 
 #endif // SERVER_H

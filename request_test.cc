@@ -14,7 +14,9 @@ TEST(RequestParser, ValidRequest) {
     std::unique_ptr<Request> request = Request::Parse(test_string);
 
     ASSERT_TRUE(request != NULL);
-
+    
+    EXPECT_EQ(Request::GetParseResult(), Request::good);    
+    
     EXPECT_EQ(test_string, request->raw_request());
 
     EXPECT_EQ("GET", request->method());
@@ -52,6 +54,8 @@ TEST(RequestParser, ValidBodyRequest) {
     std::unique_ptr<Request> request = Request::Parse(test_string);
 
     ASSERT_TRUE(request != NULL);
+    
+    EXPECT_EQ(Request::GetParseResult(), Request::good);
 
     EXPECT_EQ(test_string, request->raw_request());
 
@@ -83,18 +87,20 @@ TEST(RequestParser, ValidBodyRequest) {
 }
 
 
-TEST(RequestParser, IncompleteRequest) {
+TEST(RequestParser, IndeterminateRequest) {
     
-    std::string test_string = "GET /echo%20world HT";
+    std::string test_string = "GET /echo HT";
 
     std::unique_ptr<Request> request = Request::Parse(test_string);
 
     ASSERT_TRUE(request == NULL);
+    
+    EXPECT_EQ(Request::GetParseResult(), Request::indeterminate);
 
 }
 
 
-TEST(RequestParser, InvalidRequest) { 
+TEST(RequestParser, BadRequest) { 
 
     std::string test_string = "This is just some\r\n"
                               "random text\r\n";
@@ -103,4 +109,5 @@ TEST(RequestParser, InvalidRequest) {
 
     ASSERT_TRUE(request == NULL);
 
+    EXPECT_EQ(Request::GetParseResult(), Request::bad);
 }
