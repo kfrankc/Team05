@@ -72,3 +72,7 @@ TEST_F(ReverseProxyHandlerTest, NoProtocol) {
   init_status = initProxy("/reverse_proxy");
   EXPECT_EQ(init_status, RequestHandler::Error);
 }
+
+// TEST_F(ReverseProxyHandlerTest, 302Test) {
+
+// }
