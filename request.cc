@@ -1,10 +1,27 @@
 #include "request.h"
 #include <memory>
 #include <sstream>
+#include <thread>
 
+// These are local variables per thread 
+thread_local Request::Result result = Request::indeterminate;
+thread_local Request local_request;
 
 // Default constructor
 Request::Request() : state(_method_start) {
+}
+
+
+// Reset the request to fresh state
+void Request::Reset() {
+    raw_request_ = std::string();
+    method_ = std::string();
+    uri_ = std::string();
+    path_ = std::string();
+    version_ = std::string();
+    headers_ = Headers();
+    body_ = std::string();
+    state = _method_start;
 }
 
 
@@ -12,21 +29,29 @@ Request::Request() : state(_method_start) {
 // complete request has been parsed, nullptr if the data is invalid or
 // indeterminate
 std::unique_ptr<Request> Request::Parse(const std::string& raw_request) {
-    Result result = indeterminate;
-    std::unique_ptr<Request>    request = std::unique_ptr<Request>(new Request);
+    result = indeterminate;
     std::string::const_iterator begin   = raw_request.begin();
     std::string::const_iterator end     = raw_request.end();
     while (begin != end) {
-        result = request->Consume(*begin++);
-        if (result == good)
-            return request;
-        else if (result == bad)
+        result = local_request.Consume(*begin++);
+        if (result == good) {
+            auto r = std::unique_ptr<Request>(new Request(local_request));
+            local_request.Reset();
+            return r;
+        } else if (result == bad) {
+            local_request.Reset();
             return std::unique_ptr<Request>(nullptr);
+        }
     }
-    if (result == indeterminate) {
-        return std::unique_ptr<Request>(nullptr);    
-    }
-    return request;
+    
+    // Must be indeterminate request
+    return std::unique_ptr<Request>(nullptr);
+}
+
+
+// Return the result of the request Parse function 
+Request::Result Request::GetParseResult() {
+    return result;
 }
 
 
