@@ -25,6 +25,11 @@ path / ReverseProxyHandler {
     remote_port 80;
 }
 
+path /redirect ReverseProxyHandler {
+    remote_host ucla.edu;
+    remote_port 80;
+}
+
 # Default response handler if no handlers match
 default NotFoundHandler {}
 
