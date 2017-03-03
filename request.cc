@@ -83,6 +83,10 @@ std::string Request::uri() const {
     return uri_;
 }
 
+// Sets the uri for the request
+void Request::SetUri(const std::string& uri) {
+  uri_ = uri;
+}
 
 // Returns the path represented by the URI or the empty string if invalid
 std::string Request::path() const {
@@ -377,5 +381,18 @@ Request::Result Request::Consume(char input) {
     default:
         return bad;
     }
+}
+
+std::string Request::ToString() const {
+    std::string request_headers_str = method_ + " "
+                                      + uri_ + " "
+                                      + version_ + "\r\n" ;
+
+    for (size_t i = 0; i < headers_.size(); i++) {
+        request_headers_str += headers_[i].first + ": "
+                            + headers_[i].second + "\r\n";
+    }
+
+    return request_headers_str + "\r\n" + body_;
 }
 

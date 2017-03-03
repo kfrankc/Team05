@@ -46,6 +46,9 @@ public:
     // Gets the resource identifier for the request
     std::string uri() const;
 
+    // Sets the uri of the request
+    void SetUri(const std::string& uri);
+
     // Returns the path represented by the URI or the empty string if invalid
     std::string path() const;
 
@@ -58,6 +61,9 @@ public:
 
     // Gets the body of the request
     std::string body() const;
+
+    // Returns the full request as a string
+    std::string ToString() const;
 
 protected:
 
