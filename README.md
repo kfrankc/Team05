@@ -46,3 +46,10 @@ Once you are all done with making your handler, you can use it by running the
 server with a config file that gives your handler a path. Please see  
 example_config for an example on how to do that.
 
+## Multithreading  
+The server begins with a single thread that accepts TCP connections. Any time  
+a connection is accepted, the server creates a new thread for that connection.  
+This thread reads any data sent and writes back a response. The thread closes  
+as soon as it writes back a response or the connection closes. This means that  
+the server can respond to many different requests all at the same time.
+
