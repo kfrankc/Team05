@@ -144,7 +144,11 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
     tcp::resolver resolver(io_service);
-    tcp::resolver::query query(remote_host, remote_port);
+    // Avoid "host not found" error
+    // See: https://stackoverflow.com/questions/12542460/boost-asio-host-not-found-authorative
+    tcp::resolver::query query(remote_host,
+                               remote_port,
+                               boost::asio::ip::resolver_query_base::numeric_service);
 
     // Use resolver to handle DNS lookup if query is not an IP address
     boost::system::error_code ec;
@@ -227,6 +231,7 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     std::string response_buffer_string = sendRequestToOrigin(request, request.uri());
 
     if (response_buffer_string == "RequestHandler::Error") {
+        response->SetStatus(Response::not_found);
         return RequestHandler::Error;
     }
 
