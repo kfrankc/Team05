@@ -42,7 +42,7 @@ private:
     // Returns the string representation of the response received from the remote_host
     // Origin is the remote_host that is the original source of the content
     // we're serving on their behalf
-    std::string sendRequestToOrigin(const std::string& remote_uri);
+    std::string sendRequestToOrigin(Request request, std::string remote_uri);
 
     // Helper for editing the path of relative URIs
     // When HTML elements require resources with a path relative to their origin, for

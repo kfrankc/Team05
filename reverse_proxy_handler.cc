@@ -86,6 +86,7 @@ std::string ReverseProxyHandler::getRemoteResponseCode(const std::string& respon
     // HTTP/1.0 200 OK
     // Content-Length: 3497
     // Content-Type: text/plain
+    //
     // <body contents>
     //
     // We check just the first line
@@ -139,7 +140,7 @@ std::string ReverseProxyHandler::getRemoteResponseCode(const std::string& respon
 // Returns the string representation of the response received from the remote_host
 // Origin is the remote_host that is the original source of the content
 // we're serving on their behalf
-std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_uri) {
+std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::string remote_uri) {
     boost::asio::io_service io_service;
     tcp::socket socket(io_service);
     tcp::resolver resolver(io_service);
@@ -159,12 +160,26 @@ std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_u
 
     std::cerr << "Got past connecting to remote_host!" << std::endl;
 
-    std::string remote_request
-      = "GET " + remote_uri + " HTTP/1.1" + "\r\n\r\n";
+    // Construct new request to send to remote host
+    // Example: Modify request from: /reverse_proxy/static/file1.txt
+    // to:                           /static/file1.txt
+    remote_uri.erase(0, remote_uri.find("/", 1));
+
+    if (remote_uri.empty()) {
+      remote_uri = "/";
+    }
+
+    request.SetUri(remote_uri);
+    std::string remote_request = request.ToString();
 
     std::cerr << "Sending remote_request: " << remote_request << std::endl;
 
-    boost::asio::write(socket, boost::asio::buffer(remote_request));
+    // TODO: for some reason the server fails to transfer an image through the reverse_proxy.
+    // Right now, it will send like 4 bytes then just sit there. Also, requests to
+    // /reverse_proxy/echo and /reverse_proxy/status through curl are correctly recieved and
+    // when diff'd they show nothing. However, firefox will try to download the file instead
+    // of rendering text for every handler.
+    boost::asio::write(socket, boost::asio::buffer(remote_request, remote_request.size()));
 
     // Based on: https://github.com/UCLA-CS130/Mr.-Robot-et-al./blob/c9b064c68cd4bc1ae6b5c012db59eae9cb8b946d/lightning_server.cc#L26
     const int MAX_BUFFER_LENGTH = 8192;
@@ -173,7 +188,8 @@ std::string ReverseProxyHandler::sendRequestToOrigin(const std::string& remote_u
 
     // TODO: need to loop and keep reading if we recieve a large file, `read_some` blocks until
     // it reads a non-zero number of bytes, but have to somehow check against its return value
-    socket.read_some(boost::asio::buffer(response_buffer), ec);
+    int bytes_read = socket.read_some(boost::asio::buffer(response_buffer), ec);
+    std::cout << "bytes_read: " << bytes_read << std::endl;
 
     switch (ec.value()) {
       case boost::system::errc::success:
@@ -207,17 +223,8 @@ void ReverseProxyHandler::rerouteRelativeUris(std::string& response_body) {
 // HTTP code 500
 RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request,
     Response* response) {
-    // Construct new request to send to remote host
-    // Example: Modify request from: /reverse_proxy/static/file1.txt
-    // to:                           /static/file1.txt
-    std::string remote_uri = request.uri();
-    remote_uri.erase(0, original_uri_prefix.size());
 
-    if (remote_uri.empty()) {
-      remote_uri = "/";
-    }
-
-    std::string response_buffer_string = sendRequestToOrigin(remote_uri);
+    std::string response_buffer_string = sendRequestToOrigin(request, request.uri());
 
     if (response_buffer_string == "RequestHandler::Error") {
         return RequestHandler::Error;
@@ -237,7 +244,10 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
         }
 
         std::string new_remote_uri = getLocationHeaderValue(response_buffer_string);
-        response_buffer_string = sendRequestToOrigin(new_remote_uri);
+        std::cout << "\nTrying to send another request with remote_url: " << new_remote_uri << std::endl << std::endl;
+        // TODO: should this be setting the Host: or Location: header instead of uri?
+        // for example, when redirected from ucla.edu, new_remote_uri = http://www.ucla.edu
+        response_buffer_string = sendRequestToOrigin(request, new_remote_uri);
         return_response_code = getRemoteResponseCode(response_buffer_string);
 
         num_tries++;
@@ -256,15 +266,30 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     // NOTE: find() matches an entire sequence; find_first_of() matches
     // the first of any character specified in the search pattern
     int end_headers = response_buffer_string.find("\r\n\r\n");
+
     std::cerr << "end_headers index: " << end_headers << std::endl;
-    // + 4 to erase the double CRLF
-    // TODO: need to make sure content-length is set so the client doesn't hang
-    //    We should probably also be copying most of the headers we recieve from
-    //    the remote_request_response
-    // Right now its a random number (size of most basic echo request)
-    response->AddHeader("Content-Length", "22");
+
+    // Copying over headers from the remote response
+    int header_start = response_buffer_string.find("\r\n") + 2;
+    int header_end = response_buffer_string.find("\r\n", header_start);
+    while (header_end <= end_headers) {
+      // Find ':' separating header key and header value, then add two to get to the start
+      // of the header value.
+      int colon_pos = response_buffer_string.find_first_of(':', header_start);
+      int header_type_len = colon_pos - header_start;
+      int header_value_len = header_end - colon_pos - 1;
+      std::string header_type = response_buffer_string.substr(header_start, header_type_len);
+      std::string header_value = response_buffer_string.substr(colon_pos+2, header_value_len);
+      response->AddHeader(header_type, header_value);
+
+      // After processing current header, move position past the previously found "\r\n"
+      header_start = header_end + 2;
+      header_end = response_buffer_string.find("\r\n", header_start);
+    }
+
+    // Erase headers from the response after adding them to the Response object
+    // the +4 is to skip the double carriage return
     response_buffer_string.erase(0, end_headers + 4);
-    rerouteRelativeUris(response_buffer_string);
     response->SetBody(response_buffer_string);
 
     return RequestHandler::OK;
