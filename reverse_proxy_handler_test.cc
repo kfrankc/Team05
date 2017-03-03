@@ -13,12 +13,11 @@ class ReverseProxyHandlerTest : public ::testing::Test {
   protected:
     bool parseString(const std::string config_string) {
       std::stringstream config_stream(config_string);
-      return parser.Parse(&config_stream, &out_config);
+      return config_parser.Parse(&config_stream, &out_config);
     }
 
     RequestHandler::Status initProxy(std::string prefix){
-      std::cout << "hello: " << out_config.statements.size() << std::endl;
-      return proxy_handler.Init(prefix, out_config);
+      return proxy_handler.Init(prefix, *out_config.statements[0]->child_block);
     }
 
     std::string getPrefix(){
@@ -37,8 +36,8 @@ class ReverseProxyHandlerTest : public ::testing::Test {
       return proxy_handler.HandleRequest(request, response);
     }
 
-    NginxConfigParser parser;
     NginxConfig out_config;
+    NginxConfigParser config_parser;
     ReverseProxyHandler proxy_handler;
 };
 
@@ -52,5 +51,24 @@ TEST_F(ReverseProxyHandlerTest, Init) {
   EXPECT_EQ(init_status, RequestHandler::OK);
   EXPECT_EQ(getPrefix(), "/reverse_proxy");
   EXPECT_EQ(getHost(), "localhost");
+  std::cout << "getPrefix: " << getPrefix() << std::endl;
   EXPECT_EQ(getPort(), "4242");
+}
+
+TEST_F(ReverseProxyHandlerTest, IllegalConfig) {
+  EXPECT_FALSE(parseString("proxy {sifusoiaf}"));
+  auto init_status = initProxy("/proxy");
+  EXPECT_EQ(init_status, RequestHandler::Error);
+  EXPECT_FALSE(parseString("proxy {http://www.ucla.edu}"));
+  init_status = initProxy("/proxy");
+  EXPECT_EQ(init_status, RequestHandler::Error);
+}
+
+TEST_F(ReverseProxyHandlerTest, NoProtocol) {
+  EXPECT_TRUE(parseString("/reverse_proxy {}"));
+  auto init_status = initProxy("/reverse_proxy");
+  EXPECT_EQ(init_status, RequestHandler::Error);
+  EXPECT_TRUE(parseString("/maproxy {}"));
+  init_status = initProxy("/reverse_proxy");
+  EXPECT_EQ(init_status, RequestHandler::Error);
 }

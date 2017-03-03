@@ -1,12 +1,11 @@
 import re
 from subprocess import Popen
 from subprocess import PIPE
-import socket
 import sys
 
 def outputChecker(curl, curl_expected):
     curl_output = curl.communicate()[0].decode()
-    sys.stdout.write("\nServer output for integration test 1\n")
+    sys.stdout.write("\nServer output for integration test\n")
     sys.stdout.write("==========\n")
     sys.stdout.write(curl_output)
     sys.stdout.write("==========\n\n")
@@ -41,16 +40,6 @@ curl_output_expected_static_image = [
     "Content-Type: image/jpeg\r\n"
 ]
 
-# The expected output from the multithreading test
-expected_multithreaded_output = (
-    "HTTP/1.0 200 OK\r\n"
-    "Content-Length: 22\r\n"
-    "Content-Type: text/plain\r\n"
-    "\r\n"
-    "GET /echo HTTP/1.0\r\n"
-    "\r\n"
-)
-
 # We start off with the assumption that the test will succeed
 ec = 0
 
@@ -71,7 +60,7 @@ ec = outputChecker(curl, curl_output_expected_echo2)
 # Request a file from the webserver using curl
 curl = Popen(["curl", "-0", "-s", "localhost:2020/test_file"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
-sys.stdout.write("\nServer output for integration test 3 - file handler\n")
+sys.stdout.write("\nServer output for integration test 3\n")
 sys.stdout.write("==========\n")
 sys.stdout.write(curl_output)
 sys.stdout.write("==========\n\n")
@@ -87,13 +76,13 @@ ec = outputChecker(curl, curl_output_expected_static_image)
 # Request a file from the webserver using curl that does not exist
 curl = Popen(["curl", "-0", "-s", "localhost:2020/doesnotexist"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
-sys.stdout.write("\nServer output for integration test 5 - handler dne\n")
+sys.stdout.write("\nServer output for integration test 5\n")
 sys.stdout.write("==========\n")
 sys.stdout.write(curl_output)
 sys.stdout.write("\n==========\n\n")
 if not curl_output == "<html><head><title>Not Found</title></head><body><h1>404 Not Found</h1></body></html>":
     ec = 1
-    sys.stdout.write("FAILED to match the following expression:\n")
+    sys.stdout.write("FAILED to match the following regular expression:\n")
     sys.stdout.write("  <html><head><title>Not Found</title></head><body><h1>404 Not Found</h1></body></html>\n")
 
 # Request echo response from the  reverse proxy webserver
@@ -127,4 +116,3 @@ if ec == 0:
 else:
     sys.stdout.write("INTEGRATION TEST FAILED\n")
     sys.exit(ec)
-
