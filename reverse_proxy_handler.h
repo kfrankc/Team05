@@ -10,7 +10,7 @@
 //
 // See: https://github.com/UCLA-CS130/Mr.-Robot-et-al./issues/62
 
-// We use this in reverse_proxy_hanlder_test.cc
+// We use this in reverse_proxy_handler_test.cc
 class ReverseProxyHandlerTest;
 
 // Retrieves a file from the server's file system
