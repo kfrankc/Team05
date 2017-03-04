@@ -23,6 +23,9 @@ LDFLAGS+=-lboost_system -pthread
 # Test flags
 TESTFLAGS=-std=c++11 -isystem ${GTEST_DIR}/include -pthread
 
+# Test files, e.g., downloaded files from integration tests
+TEST_FILES=proxy_bunny
+
 # Source files
 SRC=server.cc config_parser.cc response.cc \
 server_config_parser.cc request.cc echo_handler.cc \
@@ -39,6 +42,7 @@ clean_target:
 
 clean: clean_target
 	$(RM) $(GCOVFILES) $(TESTEXEC) $(GTEST_FILES) *_gcov.txt
+	$(RM) $(TEST_FILES)
 
 test_gcov: $(GCOVEXEC)
 
