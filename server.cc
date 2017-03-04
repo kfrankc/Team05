@@ -85,6 +85,10 @@ void Session::do_read() {
             do_read();
         }
     }
+
+    //  Initiate graceful connection closure.
+    boost::system::error_code ignored_ec;
+    socket.shutdown(tcp::socket::shutdown_both, ignored_ec);
 }
 
 

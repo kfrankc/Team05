@@ -83,6 +83,14 @@ std::string Request::uri() const {
     return uri_;
 }
 
+// Sets the uri for the request
+void Request::SetUri(const std::string& uri) {
+  uri_ = uri;
+  size_t uri_pos = raw_request_.find(" ") + 1;
+  size_t uri_end = raw_request_.find(" ", uri_pos);
+  size_t uri_len = uri_end - uri_pos;
+  raw_request_.replace(uri_pos, uri_len, uri);
+}
 
 // Returns the path represented by the URI or the empty string if invalid
 std::string Request::path() const {

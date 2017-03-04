@@ -284,6 +284,10 @@ void Response::SetStatus(const ResponseCode code) {
 
 // Converts response to a string representing data to be sent to the client
 std::string Response::ToString() const {
+     if (full_response != ""){
+         return full_response;
+     }
+
     std::string response_string;
     response_string += StatusString::ToString(status);
     for (std::size_t i = 0; i < headers.size(); ++i) {
@@ -296,5 +300,10 @@ std::string Response::ToString() const {
     response_string += MiscString::crlf;
     response_string += content;
     return response_string;
+}
+
+// Sets the whole response, headers and body
+void Response::SetFullResponse(const std::string& response) {
+  full_response = response;
 }
 

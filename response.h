@@ -70,11 +70,15 @@ public:
     // Converts response to a string representing data to be sent to the client
     std::string ToString() const;
 
+    // Sets the whole response, headers and body
+    void SetFullResponse(const std::string& response);
+
 private:
 
     ResponseCode status; // Status code of the http response
     std::vector<std::pair<std::string, std::string> > headers; // Vector of headers for the http response
     std::string content; // Body of http response
+    std::string full_response; // Header + Body of response
 };
 
 

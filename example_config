@@ -15,11 +15,6 @@ path /echo EchoHandler {}
 
 path /status StatusHandler {}
 
-path /reverse_proxy ReverseProxyHandler {
-    remote_host localhost;
-    remote_port 4242;
-}
-
 # Default response handler if no handlers match
 default NotFoundHandler {}
 
