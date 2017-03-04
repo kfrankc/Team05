@@ -51,7 +51,6 @@ TEST_F(ReverseProxyHandlerTest, Init) {
   EXPECT_EQ(init_status, RequestHandler::OK);
   EXPECT_EQ(getPrefix(), "/reverse_proxy");
   EXPECT_EQ(getHost(), "localhost");
-  std::cout << "getPrefix: " << getPrefix() << std::endl;
   EXPECT_EQ(getPort(), "4242");
 }
 
@@ -73,6 +72,16 @@ TEST_F(ReverseProxyHandlerTest, NoProtocol) {
   EXPECT_EQ(init_status, RequestHandler::Error);
 }
 
-// TEST_F(ReverseProxyHandlerTest, 302Test) {
+TEST_F(ReverseProxyHandlerTest, HandleRequest) {
+  std::string config_string = "path / ReverseProxyHandler {"
+                              "    remote_host ucla.edu;"
+                              "    remote_port 80;"
+                              "}";
+  auto init_status = initProxy("/");
+  EXPECT_EQ(init_status, RequestHandler::OK);
+  EXPECT_EQ(getPrefix(), "/");
+  EXPECT_EQ(getHost(), "ucla.edu");
+  EXPECT_EQ(getPort(), "80");
 
-// }
+  ASSERT_EQ(HandleRequest(req, &resp), RequestHandler::Status::OK);
+} 

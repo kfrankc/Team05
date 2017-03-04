@@ -86,11 +86,11 @@ if not curl_output == "<html><head><title>Not Found</title></head><body><h1>404 
     sys.stdout.write("  <html><head><title>Not Found</title></head><body><h1>404 Not Found</h1></body></html>\n")
 
 # Request echo response from the  reverse proxy webserver
-curl = Popen(["curl", "-0", "-s", "localhost:2020/reverse_proxy/echo"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/echo"], stdout=PIPE)
 ec = outputChecker(curl, curl_output_expected_echo)
 
 # Request a file from the  reverse proxy webserver
-curl = Popen(["curl", "-0", "-s", "localhost:2020/reverse_proxy/static/test_file"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/test_file"], stdout=PIPE)
 curl_output = curl.communicate()[0].decode()
 sys.stdout.write("\nServer output for integration test\n")
 sys.stdout.write("==========\n")
@@ -102,8 +102,16 @@ if not curl_output == "TEST\n":
     sys.stdout.write("  TEST\n")
 
 # Request an image from the  reverse proxy webserver
-curl = Popen(["curl", "-0", "-s", "localhost:2020/reverse_proxy/static/bunny.jpg"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/static/bunny.jpg"], stdout=PIPE)
 ec = outputChecker(curl, curl_output_expected_static_image)
+
+# Request ucla.edu from reverse proxy webserver for 302 testing
+curl = Popen(["curl", "-0", "-s", "localhost:4242/redirect"], stdout=PIPE)
+curl_output = curl.communicate()[0].decode()
+curl_expected = Popen(["curl", "-0", "-s", "ucla.edu"], stdout=PIPE)
+curl_output_expected = curl_expected.communicate()[0].decode()
+if (curl_output != curl_output_expected):
+    ec = 1
 
 # Close the webserver
 webserver1.terminate()
