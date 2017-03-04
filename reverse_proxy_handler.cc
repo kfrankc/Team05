@@ -115,7 +115,7 @@ std::string ReverseProxyHandler::getRemoteResponseCode(const std::string& respon
          i++) {
         if (i == 1) {
             std::string remote_response_code = *cur_token;
-            std::cerr << "remote_response_code: " << remote_response_code << std::endl;
+            // std::cerr << "remote_response_code: " << remote_response_code << std::endl;
 
             if (remote_response_code == "200") {
                 return_response_code = "200";
@@ -175,16 +175,16 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
           return "RequestHandler::Error";
       }
 
-      std::cerr << "Got past connecting to remote_host!" << std::endl;
+      // std::cerr << "Got past connecting to remote_host!" << std::endl;
 
       std::string remote_request = request.raw_request();
       size_t host_pos = remote_request.find("Host");
       size_t host_end = remote_request.find("\r\n", host_pos);
       size_t host_len = host_end - host_pos;
       remote_request.replace(host_pos, host_len, "Host: " + remote_host);
-      std::cerr << "---------Sending remote_request-----------\n"
-                << remote_request
-                << "----------End of remote_request----------\n";
+      // std::cerr << "---------Sending remote_request-----------\n"
+                // << remote_request
+                // << "----------End of remote_request----------\n";
       socket.send(boost::asio::buffer(remote_request));
 
       const int MAX_BUFFER_LENGTH = 1024;
@@ -195,7 +195,7 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
         if (!ec) {
           new_response.append(response_buffer, response_buffer + bytes_received);
         }
-        std::cerr << "bytes_received: " << bytes_received << "    ec: " << ec << std::endl;
+        // std::cerr << "bytes_received: " << bytes_received << "    ec: " << ec << std::endl;
       } while (!ec);
 
       if (new_response.find("HTTP/1.1 302 Found") != std::string::npos) {
@@ -205,40 +205,26 @@ std::string ReverseProxyHandler::sendRequestToOrigin(Request request, std::strin
         size_t slash = new_response.find("/", www);
         remote_host = new_response.substr(www, slash - www);
         new_response = "";
-        std::cout << "Redirected: setting remote_host to " << remote_host << std::endl;
+        // std::cout << "Redirected: setting remote_host to " << remote_host << std::endl;
       }
       else {
         got_302 = false;
       }
-      std::cout << "Got_302? " << got_302 << std::endl;
+      // std::cout << "Got_302? " << got_302 << std::endl;
     } while (got_302);
 
     // Checking ec set when reading response from remote host
     switch (ec.value()) {
       case boost::asio::error::eof:
       case boost::system::errc::success:
-        std::cerr << "remote_host's response: \n" << new_response << std::endl;
+        // std::cerr << "remote_host's response: \n" << new_response << std::endl;
         break;
       default:
-        std::cerr << "Error reading from remote_host, error code: " << ec << std::endl;
+        // std::cerr << "Error reading from remote_host, error code: " << ec << std::endl;
         return "RequestHandler::Error";
     }
 
     return new_response;
-}
-
-// Helper for editing the path of relative URIs
-// When HTML elements require resources with a path relative to their origin, for
-// example a stylesheet for www.foobar.com/home which has the path:
-// 'href="../css/style.css"', we need to change the '="../"' to '="/home/../"'.
-void ReverseProxyHandler::rerouteRelativeUris(std::string& response_body) {
-    if (original_uri_prefix != "/") {
-        std::string new_href = "href=\"" + original_uri_prefix + "/";
-        boost::replace_all(response_body, "href=\"/", new_href);
-
-        std::string new_src = "src=\"" + original_uri_prefix + "/";
-        boost::replace_all(response_body, "src=\"/", new_src);
-    }
 }
 
 // Helper for editing the path of relative URIs
@@ -270,7 +256,7 @@ RequestHandler::Status ReverseProxyHandler::HandleRequest(const Request& request
     }
 
     std::string return_response_code = getRemoteResponseCode(response_buffer_string);
-    std::cerr << "return_response_code: " << return_response_code << std::endl;
+    // std::cerr << "return_response_code: " << return_response_code << std::endl;
 
     if (return_response_code == "200") {
         response->SetStatus(Response::ok);
