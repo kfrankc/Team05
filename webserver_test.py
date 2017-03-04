@@ -102,24 +102,21 @@ if not curl_output == "TEST\n":
     sys.stdout.write("  TEST\n")
 
 # Request an image from the  reverse proxy webserver
-# Popen(["curl", "-0", "-s", "localhost:4242/reverse_proxy/bunny.jpg", ">>", "proxy_bunny"], stdout=PIPE)
-Popen(["wget", "--quiet" ,"-O", "proxy_bunny", "localhost:4242/reverse_proxy/bunny.jpg"], stdout=PIPE)
-
-# diff = Popen(["diff", "bunny.jpg", "proxy_bunny"],stdout=PIPE)
-diff = Popen(["cmp", "bunny.jpg", "proxy_bunny"],stdout=PIPE)
-print diff.communicate()[0]
-# if (diff.communicate()[0] != ""):
-#     ec = 1
-
-# Popen(["rm", "proxy_bunny"], stdout=PIPE)
+curl = Popen(["curl", "-0", "-s", "-o", "proxy_bunny", "localhost:4242/reverse_proxy/bunny.jpg"], stdout=PIPE)
+diff = Popen(["cmp", "bunny.jpg", "proxy_bunny"], stdout=PIPE)
+if (diff.communicate()[0].decode() != ""):
+    ec = 1
+    sys.stdout.write("FAILED to download matching copy of bunny.jpg via reverse-proxy\n")
 
 # Request ucla.edu from reverse proxy webserver for 302 testing
-# curl = Popen(["curl", "-0", "-s", "localhost:4242/redirect"], stdout=PIPE)
-# curl_output = curl.communicate()[0].decode()
-# curl_expected = Popen(["curl", "-0", "-s", "ucla.edu"], stdout=PIPE)
-# curl_output_expected = curl_expected.communicate()[0].decode()
-# if (curl_output != curl_output_expected):
-#     ec = 1
+curl = Popen(["curl", "-0", "-s", "localhost:4242/redirect"], stdout=PIPE)
+curl_output = curl.communicate()[0].decode("utf-8")
+# Note: ucla.edu results in a 302 Found redirect to www.ucla.edu
+curl_expected = Popen(["curl", "-0", "-s", "www.ucla.edu"], stdout=PIPE)
+curl_output_expected = curl_expected.communicate()[0].decode("utf-8")
+if (curl_output != curl_output_expected):
+    ec = 1
+    sys.stdout.write("FAILED to redirect to ucla.edu via reverse-proxy\n")
 
 # Close the webserver
 webserver1.terminate()
@@ -127,8 +124,8 @@ webserver2.terminate()
 
 # Return 0 if the test succeeded or some other value on failure
 if ec == 0:
-    sys.stdout.write("INTEGRATION TEST SUCCEEDED\n")
+    sys.stdout.write("INTEGRATION TESTS SUCCEEDED\n")
     sys.exit(0)
 else:
-    sys.stdout.write("INTEGRATION TEST FAILED\n")
+    sys.stdout.write("INTEGRATION TESTS FAILED\n")
     sys.exit(ec)
