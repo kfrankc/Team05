@@ -9,8 +9,16 @@
 // to which it actually reaches out.
 //
 // See: https://github.com/UCLA-CS130/Mr.-Robot-et-al./issues/62
+
+// We use this in reverse_proxy_hanlder_test.cc
+class ReverseProxyHandlerTest;
+
+// Retrieves a file from the server's file system
 class ReverseProxyHandler : public RequestHandler {
 public:
+
+    // We use friend so that ReverseProxyHandlerTest can access private variables for testing
+    friend class ReverseProxyHandlerTest;
 
     // Initializes the handler. Returns OK if successful
     // uri_prefix is the value in the config file that this handler will run for
