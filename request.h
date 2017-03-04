@@ -62,9 +62,6 @@ public:
     // Gets the body of the request
     std::string body() const;
 
-    // Returns the full request as a string
-    std::string ToString() const;
-
 protected:
 
     // Handles the next character of input to the parser
